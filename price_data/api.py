@@ -1,7 +1,8 @@
 import os
-from pathlib import Path
-import pandas as pd
 import urllib.request
+from pathlib import Path
+
+import pandas as pd
 
 API_KEY = '8X2HU0WTHV1BX717'
 DAILY_DATA_URL = 'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=<symbol>&market=<market>&apikey=<api_key>&datatype=csv'  # nopep8
@@ -10,31 +11,45 @@ DAILY_DATA_URL = 'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DA
 def read_price_csv(filename: str) -> pd.DataFrame:
     df = pd.read_csv(filename)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df = df.set_index('timestamp')
     return df
 
 
-def update_daily_data(symbol: str, currency='USD'):
-    filename = './data/'+symbol+'_'+currency+'.csv'
+def fetch_new_daily_data(symbol: str):
     url = DAILY_DATA_URL
-    url = url.replace('<api_key>', API_KEY)\
-        .replace('<symbol>', symbol)\
-        .replace('<market>', currency)
-    if Path(filename).is_file() is not True:
-        urllib.request.urlretrieve(url, filename)
-    else:
+    url = url.replace('<api_key>', API_KEY) \
+        .replace('<symbol>', symbol) \
+        .replace('<market>', 'USD')
+    urllib.request.urlretrieve(url, './temp.csv')
+    data = read_price_csv('./temp.csv')
+    data = data.rename(columns={"open (USD)": "open", "high (USD)": "high", "low (USD)": "low", "close (USD)": "close",
+                                "market cap (USD)": "market cap"})
+    data = data.drop(["open (USD).1", "high (USD).1", "low (USD).1", "close (USD).1"], axis=1)
+    os.remove('temp.csv')
+    return data
+
+
+def update_daily_data(symbol: str):
+    filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    new_data = fetch_new_daily_data(symbol)
+    if Path(filename).is_file() is True:
         old_data = read_price_csv(filename)
+        new_data = pd.concat([new_data, old_data]).groupby('timestamp').first()
+        new_data = new_data.sort_values('timestamp', ascending=False)
+    new_data.to_csv(filename)
 
-        urllib.request.urlretrieve(url, filename+'_temp')
-        new_data = read_price_csv(filename + '_temp')
-        updated_data = pd.concat([new_data, old_data]).groupby('timestamp').first()
 
-        updated_data = updated_data.sort_values('timestamp', ascending=False)
-        updated_data.to_csv(filename)
-        os.remove(filename+'_temp')
-        print(updated_data.index.dtype)
+def read_price_data(symbol: str, start_time, end_time, resolution='Daily'):
+    filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    df = pd.read_csv(filename)
+    mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
+    return df.loc[mask]
 
 
 if __name__ == '__main__':
-    # tests
-    update_daily_data('ETH')
     update_daily_data('BTC')
+    print(read_price_data('BTC', '2021-01-01', '2021-01-02'))
+    update_daily_data('BTC')
+    print(read_price_data('BTC', '2021-01-01', '2021-01-02'))
+    update_daily_data('ETH')
+    print(read_price_data('ETH', '2021-01-01', '2021-01-02').dtypes)
