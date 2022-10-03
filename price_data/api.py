@@ -40,7 +40,10 @@ def update_daily_data(symbol: str):
 
 
 def read_price_data(symbol: str, start_time, end_time, resolution='Daily'):
-    filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    if resolution == 'Daily':
+        filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    else:
+        print(f"{resolution} resolution is not currently supported!")
     df = pd.read_csv(filename)
     mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
     return df.loc[mask]
