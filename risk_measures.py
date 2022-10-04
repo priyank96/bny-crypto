@@ -4,7 +4,7 @@ from scipy.stats import norm
 
 from price_data import read_price_data
 from util import plot
-
+import ta
 
 class MDD:
     """
@@ -68,6 +68,20 @@ class Volatility:
         # Implementation: https://stackoverflow.com/a/52941348/5699807 ; https://stackoverflow.com/a/43284457/5699807
         return df['close'].rolling(window=window).std(ddof=0)
 
+class RSI: 
+    def calculate(df: pd.DataFrame):
+        return ta.momentum.rsi(df.close)
+
+class Stochastic_Oscillator: 
+    def calculate(df: pd.DataFrame):
+        return ta.momentum.stoch(df.high, df.low, df.close), ta.momentum.stoch_signal(df.high, df.low, df.close)
+
+class OBV:
+    def calculate(df: pd.DataFrame):
+        copy = df.copy()
+        return (np.sign(copy['close'].diff())*copy['volume']).fillna(0).cumsum()
+
+
 
 if __name__ == '__main__':
     df = read_price_data('BTC', '2021-01-01', '2021-10-20', 'Daily')
@@ -76,6 +90,10 @@ if __name__ == '__main__':
     values['volatility'] = Volatility.calculate(df)
     values['mdd'] = MDD.calculate(df)
     # values['var'] = VaR.calculate(df)
+    values['rsi'] = RSI.calculate(df)
+    values['obv'] = OBV.calculate(df)
+    values['stoch_k'], values['stoch_d'] = Stochastic_Oscillator.calculate(df)
+
     values['timestamp'] = df['timestamp']
     values = values.set_index('timestamp')
     plot(values)
