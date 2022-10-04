@@ -69,7 +69,7 @@ if __name__ == '__main__':
     values['close'] = df['close']
     values['volatility'] = Volatility.calculate(df)
     values['mdd'] = MDD.calculate(df)
-    # values['var'] = VaR.calculate(df)
+    print(VaR.calculate(df))
     values['timestamp'] = df['timestamp']
     values = values.set_index('timestamp')
     plot(values)
