@@ -5,4 +5,5 @@ dependencies:
   - python=3.7
   - pandas
   - pandas-bokeh
+  - scipy
 prefix: C:\Users\admin\anaconda3\envs\capstone
