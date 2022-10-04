@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.stats import norm
 
 from price_data import read_price_data
-from util import plot
+from util import plot_grid
 
 
 class MDD:
@@ -18,7 +18,7 @@ class MDD:
         #  from https://quant.stackexchange.com/a/45407
         roll_max = df['close'].cummax()
         rolling_drawdown = df['close'] / roll_max - 1.0
-        return rolling_drawdown.cummin()
+        return -1*rolling_drawdown.cummin()
 
 
 class VaR:
@@ -30,6 +30,7 @@ class VaR:
                 Method 1 Hist Simulation: Sort daily returns and return corresponding percentiles
                 Method 2 Variance Covariance: find mean and std dev of returns and return corresponding confidence level of VaR
     """
+
     @staticmethod
     def calculate_var_row(df: pd.DataFrame, method: int):
         # from https://blog.quantinsti.com/calculating-value-at-risk-in-excel-python/
@@ -40,18 +41,18 @@ class VaR:
             var90 = sorted_returns.quantile(0.1)
             var95 = sorted_returns.quantile(0.05)
             var99 = sorted_returns.quantile(0.01)
-            return {"var_90": [var90],
-                    "var_95": [var95],
-                    "var_99": [var99]}
+            return {"var_90": [-1*var90],
+                    "var_95": [-1*var95],
+                    "var_99": [-1*var99]}
         else:
             mean = np.mean(df_temp.pct)
             std = np.std(df_temp.pct)
             var90 = norm.ppf(0.1, mean, std)
             var95 = norm.ppf(0.05, mean, std)
             var99 = norm.ppf(0.01, mean, std)
-            return {"var_90": [var90],
-                    "var_95": [var95],
-                    "var_99": [var99]}
+            return {"var_90": [-1*var90],
+                    "var_95": [-1*var95],
+                    "var_99": [-1*var99]}
 
     @staticmethod
     def calculate(df: pd.DataFrame, method: int):
@@ -60,8 +61,6 @@ class VaR:
             temp = VaR.calculate_var_row(df.iloc[:i], method)
             return_df = pd.concat([return_df, pd.DataFrame(temp)])
         return return_df
-
-
 
 
 class Volatility:
@@ -79,7 +78,7 @@ if __name__ == '__main__':
     values['close'] = df['close']
     values['volatility'] = Volatility.calculate(df)
     values['mdd'] = MDD.calculate(df)
-    values['var_90'] = VaR.calculate(df,1).var_90.values
+    values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values = values.set_index('timestamp')
-    plot(values)
+    plot_grid(values)
