@@ -6,7 +6,7 @@ from price_data import read_price_data
 from util import plot_grid
 
 
-class MDD:
+class RollingMDD:
     """
     Maximum Drawdown
     Definition: A maximum drawdown (MDD) is the maximum observed loss from a peak to a trough of a portfolio, before a new peak is attained
@@ -14,11 +14,11 @@ class MDD:
     """
 
     @staticmethod
-    def calculate(df: pd.DataFrame):
+    def calculate(df: pd.DataFrame, window=25):
         #  from https://quant.stackexchange.com/a/45407
-        roll_max = df['close'].cummax()
+        roll_max = df['close'].rolling(window).max()
         rolling_drawdown = df['close'] / roll_max - 1.0
-        return -1 * rolling_drawdown.cummin()
+        return -1 * rolling_drawdown
 
 
 class VaR:
@@ -32,7 +32,7 @@ class VaR:
     """
 
     @staticmethod
-    def calculate_var_row(df: pd.DataFrame, method: int):
+    def calculate_var_row(df: pd.DataFrame, method: int = 1):
         # from https://blog.quantinsti.com/calculating-value-at-risk-in-excel-python/
         df_temp = pd.DataFrame()
         df_temp["pct"] = df["close"].pct_change()
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     values = pd.DataFrame()
     values['close'] = df['close']
     values['volatility'] = Volatility.calculate(df)
-    values['mdd'] = MDD.calculate(df)
+    values['mdd'] = RollingMDD.calculate(df)
     values['MACD'] = MACD.calculate(df)
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
