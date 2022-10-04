@@ -30,9 +30,15 @@ class VaR:
                 Method 1 Hist Simulation: Sort daily returns and return corresponding percentiles
                 Method 2 Variance Covariance: find mean and std dev of returns and return corresponding confidence level of VaR
     """
-
-    @staticmethod
-    def calculate(df: pd.DataFrame, method: int = 1):
+    def __init__(self) -> None:
+        pass
+    def calculate(self, df: pd.DataFrame, method: int):
+        return_df = pd.DataFrame()
+        for i in range(len(df)):
+            temp = self.calculate_var_row(df.iloc[:i], method)
+            return_df = pd.concat([return_df, pd.DataFrame(temp)])
+        return return_df
+    def calculate_var_row(self, df: pd.DataFrame, method: int):
         # from https://blog.quantinsti.com/calculating-value-at-risk-in-excel-python/
         df["pct"] = df["close"].pct_change()
         if method == 1:
@@ -40,9 +46,9 @@ class VaR:
             var90 = sorted_returns.quantile(0.1)
             var95 = sorted_returns.quantile(0.05)
             var99 = sorted_returns.quantile(0.01)
-            return {"var_90": var90,
-                    "var_95": var95,
-                    "var_99": var99}
+            return {"var_90": [var90],
+                    "var_95": [var95],
+                    "var_99": [var99]}
         else:
             mean = np.mean(df.pct)
             std = np.std(df.pct)
