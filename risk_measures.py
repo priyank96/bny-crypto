@@ -3,10 +3,10 @@ import pandas as pd
 from scipy.stats import norm
 
 from price_data import read_price_data
-from util import plot
+from util import plot_grid
 
 
-class MDD:
+class RollingMDD:
     """
     Maximum Drawdown
     Definition: A maximum drawdown (MDD) is the maximum observed loss from a peak to a trough of a portfolio, before a new peak is attained
@@ -14,11 +14,11 @@ class MDD:
     """
 
     @staticmethod
-    def calculate(df: pd.DataFrame):
+    def calculate(df: pd.DataFrame, window=25):
         #  from https://quant.stackexchange.com/a/45407
-        roll_max = df['close'].cummax()
+        roll_max = df['close'].rolling(window).max()
         rolling_drawdown = df['close'] / roll_max - 1.0
-        return rolling_drawdown.cummin()
+        return -1 * rolling_drawdown
 
 
 class VaR:
@@ -30,8 +30,9 @@ class VaR:
                 Method 1 Hist Simulation: Sort daily returns and return corresponding percentiles
                 Method 2 Variance Covariance: find mean and std dev of returns and return corresponding confidence level of VaR
     """
+
     @staticmethod
-    def calculate_var_row(df: pd.DataFrame, method: int):
+    def calculate_var_row(df: pd.DataFrame, method: int = 1):
         # from https://blog.quantinsti.com/calculating-value-at-risk-in-excel-python/
         df_temp = pd.DataFrame()
         df_temp["pct"] = df["close"].pct_change()
@@ -40,18 +41,18 @@ class VaR:
             var90 = sorted_returns.quantile(0.1)
             var95 = sorted_returns.quantile(0.05)
             var99 = sorted_returns.quantile(0.01)
-            return {"var_90": [var90],
-                    "var_95": [var95],
-                    "var_99": [var99]}
+            return {"var_90": [-1 * var90],
+                    "var_95": [-1 * var95],
+                    "var_99": [-1 * var99]}
         else:
             mean = np.mean(df_temp.pct)
             std = np.std(df_temp.pct)
             var90 = norm.ppf(0.1, mean, std)
             var95 = norm.ppf(0.05, mean, std)
             var99 = norm.ppf(0.01, mean, std)
-            return {"var_90": [var90],
-                    "var_95": [var95],
-                    "var_99": [var99]}
+            return {"var_90": [-1 * var90],
+                    "var_95": [-1 * var95],
+                    "var_99": [-1 * var99]}
 
     @staticmethod
     def calculate(df: pd.DataFrame, method: int):
@@ -60,8 +61,6 @@ class VaR:
             temp = VaR.calculate_var_row(df.iloc[:i], method)
             return_df = pd.concat([return_df, pd.DataFrame(temp)])
         return return_df
-
-    
 
 
 class Volatility:
@@ -72,26 +71,27 @@ class Volatility:
         # Implementation: https://stackoverflow.com/a/52941348/5699807 ; https://stackoverflow.com/a/43284457/5699807
         return df['close'].rolling(window=window).std(ddof=0)
 
+
 class MACD:
 
     @staticmethod
-    def calculate(df: pd.DataFrame, slow_long_window = 26, slow_short_window = 12, signal_window = 9):
-        slow_long = df['close'].ewm(span = slow_long_window, adjust = False, min_periods=slow_long_window).mean()
-        slow_short = df['close'].ewm(span = slow_short_window, adjust = False, min_periods=slow_short_window).mean()
+    def calculate(df: pd.DataFrame, slow_long_window=26, slow_short_window=12, signal_window=9):
+        slow_long = df['close'].ewm(span=slow_long_window, adjust=False, min_periods=slow_long_window).mean()
+        slow_short = df['close'].ewm(span=slow_short_window, adjust=False, min_periods=slow_short_window).mean()
         MACD = slow_short - slow_long
-        signal = MACD.ewm(span = signal_window, adjust = False, min_periods=signal_window).mean()
+        signal = MACD.ewm(span=signal_window, adjust=False, min_periods=signal_window).mean()
         trigger = MACD - signal
         return trigger
+
 
 if __name__ == '__main__':
     df = read_price_data('BTC', '2021-01-01', '2021-10-20', 'Daily')
     values = pd.DataFrame()
     values['close'] = df['close']
     values['volatility'] = Volatility.calculate(df)
-    values['mdd'] = MDD.calculate(df)
+    values['mdd'] = RollingMDD.calculate(df)
     values['MACD'] = MACD.calculate(df)
-    # values['var'] = VaR.calculate(df)
-    values['var_90'] = VaR.calculate(df,1).var_90.values
+    values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values = values.set_index('timestamp')
-    plot(values)
+    plot_grid(values)
