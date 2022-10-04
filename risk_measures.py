@@ -71,6 +71,16 @@ class Volatility:
         # Implementation: https://stackoverflow.com/a/52941348/5699807 ; https://stackoverflow.com/a/43284457/5699807
         return df['close'].rolling(window=window).std(ddof=0)
 
+class MACD:
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, slow_long_window = 26, slow_short_window = 12, signal_window = 9):
+        slow_long = df['close'].ewm(span = slow_long_window, adjust = False, min_periods=slow_long_window).mean()
+        slow_short = df['close'].ewm(span = slow_short_window, adjust = False, min_periods=slow_short_window).mean()
+        MACD = slow_short - slow_long
+        signal = MACD.ewm(span = signal_window, adjust = False, min_periods=signal_window).mean()
+        trigger = MACD - signal
+        return trigger
 
 if __name__ == '__main__':
     df = read_price_data('BTC', '2021-01-01', '2021-10-20', 'Daily')
@@ -78,6 +88,7 @@ if __name__ == '__main__':
     values['close'] = df['close']
     values['volatility'] = Volatility.calculate(df)
     values['mdd'] = MDD.calculate(df)
+    values['MACD'] = MACD.calculate(df)
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values = values.set_index('timestamp')
