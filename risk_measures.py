@@ -55,7 +55,7 @@ class VaR:
                     "var_99": [-1 * var99]}
 
     @staticmethod
-    def calculate(df: pd.DataFrame, method: int):
+    def calculate(df: pd.DataFrame, method: int = 1):
         return_df = pd.DataFrame()
         for i in range(len(df)):
             temp = VaR.calculate_var_row(df.iloc[:i], method)
