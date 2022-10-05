@@ -35,7 +35,7 @@ def update_daily_data(symbol: str):
     if Path(filename).is_file() is True:
         old_data = read_price_csv(filename)
         new_data = pd.concat([new_data, old_data]).groupby('timestamp').first()
-        new_data = new_data.sort_values('timestamp', ascending=False)
+        new_data = new_data.sort_values('timestamp', ascending=True)
     new_data.to_csv(filename)
 
 
