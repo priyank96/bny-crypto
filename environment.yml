@@ -6,4 +6,5 @@ dependencies:
   - pandas
   - pandas-bokeh
   - scipy
+  - scikit-learn
 prefix: C:\Users\admin\anaconda3\envs\capstone
