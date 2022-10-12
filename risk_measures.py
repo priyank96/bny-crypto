@@ -93,5 +93,6 @@ if __name__ == '__main__':
     values['MACD'] = MACD.calculate(df)
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
+    values['timestamp'] = pd.to_datetime(values['timestamp'])
     values = values.set_index('timestamp')
     plot_grid(values)

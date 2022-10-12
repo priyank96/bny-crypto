@@ -8,7 +8,7 @@ from bokeh.models import CrosshairTool, HoverTool, Span
 from bokeh.layouts import gridplot
 
 
-def plot_grid(df: pd.DataFrame, vertical_lines: pd.DataFrame):
+def plot_grid(df: pd.DataFrame, event_lines: pd.DataFrame = None):
     figs = []
     color = itertools.cycle(palette)
     crosshair = CrosshairTool(dimensions="both")
@@ -32,17 +32,18 @@ def plot_grid(df: pd.DataFrame, vertical_lines: pd.DataFrame):
         fig.xaxis.visible = False
         figs.append(fig)
 
-    vlines = []
-    for index, row in vertical_lines.iterrows():
-        if row['sentiment'] == 1:
-            color = 'green'
-        else:
-            color = 'red'
-        vlines.append(Span(location=index, dimension='height', line_color=color, line_width=1))
+    if event_lines is not None:
+        vlines = []
+        for index, row in event_lines.iterrows():
+            if row['sentiment'] == 1:
+                color = 'green'
+            else:
+                color = 'red'
+            vlines.append(Span(location=index, dimension='height', line_color=color, line_width=1))
 
-    for fig in figs:
-        for vline in vlines:
-            fig.add_layout(vline)
+        for fig in figs:
+            for vline in vlines:
+                fig.add_layout(vline)
     show(gridplot(figs, sizing_mode='scale_both', merge_tools=True, ncols=1, width=1500, height=200))
 
 
