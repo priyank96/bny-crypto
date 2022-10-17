@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
 import ta
 from finta import TA
+from scipy.stats import norm
+
 from price_data import read_price_data
 from util import plot_grid
-
 
 
 class RollingMDD:
@@ -73,20 +73,32 @@ class Volatility:
         # Implementation: https://stackoverflow.com/a/52941348/5699807 ; https://stackoverflow.com/a/43284457/5699807
         return df['close'].rolling(window=window).std(ddof=0)
 
-class RSI: 
+
+class RSI:
+
+    @staticmethod
     def calculate(df: pd.DataFrame):
         return ta.momentum.rsi(df.close)
 
-class Stochastic_Oscillator: 
+
+class StochasticOscillator:
+
+    @staticmethod
     def calculate(df: pd.DataFrame):
         return ta.momentum.stoch(df.high, df.low, df.close), ta.momentum.stoch_signal(df.high, df.low, df.close)
 
+
 class OBV:
+
+    @staticmethod
     def calculate(df: pd.DataFrame):
         copy = df.copy()
-        return (np.sign(copy['close'].diff())*copy['volume']).fillna(0).cumsum()
+        return (np.sign(copy['close'].diff()) * copy['volume']).fillna(0).cumsum()
+
 
 class Chaikin:
+
+    @staticmethod
     def calculate(df):
         """Calculate Chaikin Oscillator for given data.
         
@@ -94,11 +106,15 @@ class Chaikin:
         :return: pandas.DataFrame
         """
         ad = (2 * df['close'] - df['high'] - df['low']) / (df['high'] - df['low']) * df['volume']
-        Chaikin = pd.Series(ad.ewm(span=3, min_periods=3).mean() - ad.ewm(span=10, min_periods=10).mean(), name='Chaikin')
+        Chaikin = pd.Series(ad.ewm(span=3, min_periods=3).mean() - ad.ewm(span=10, min_periods=10).mean(),
+                            name='Chaikin')
         # df = df.join(Chaikin)
         return Chaikin
 
-class Accumulation_Distribution:
+
+class AccumulationDistribution:
+
+    @staticmethod
     def calculate(df):
         """Calculate Accumulation/Distribution for given data.
         
@@ -108,6 +124,7 @@ class Accumulation_Distribution:
         """
 
         return TA.ADL(df)
+
 
 class MACD:
 
@@ -120,23 +137,18 @@ class MACD:
         trigger = MACD - signal
         return trigger
 
-class Money_Flow_Index:
+
+class MoneyFlowIndex:
+
+    @staticmethod
     def calculate(df):
-        #return ta.volume.MFIIndicator(df['high'],df['low'],df['close'],df['volume'],n)
+        # return ta.volume.MFIIndicator(df['high'],df['low'],df['close'],df['volume'],n)
         return TA.MFI(df)
 
-# class Money_Flow_Index:
-#     def calculate(df, n=14):
-#         typical_price = (df.high + df.low + df.close)/3
-#         money_flow = typical_price * df.volume
-#         mf_sign = np.where(typical_price > typical_price.shift(1), 1, -1)
-#         signed_mf = money_flow * mf_sign
-#         mf_avg_gain = signed_mf.rolling(n).apply(gain, raw=True)
-#         mf_avg_loss = signed_mf.rolling(n).apply(loss, raw=True)
-#         return (100 - (100 / (1 + (mf_avg_gain / abs(mf_avg_loss))))).to_numpy()
 
+class EaseOfMovement:
 
-class Ease_of_Movement:
+    @staticmethod
     def calculate(df, n):
         """Calculate Ease of Movement for given data.
         
@@ -148,7 +160,10 @@ class Ease_of_Movement:
         Eom_ma = pd.Series(EoM.rolling(n, min_periods=n).mean(), name='EoM_' + str(n))
         return Eom_ma
 
-class Commodity_Chanel_Index:
+
+class CommodityChannelIndex:
+
+    @staticmethod
     def calculate(df):
         """Calculate Commodity Channel Index for given data.
         
@@ -162,7 +177,10 @@ class Commodity_Chanel_Index:
         # return CCI
         return TA.CCI(df)
 
-class Coppock_Curve:
+
+class CoppockCurve:
+
+    @staticmethod
     def calculate(df):
         """Calculate Coppock Curve for given data.
         
@@ -171,89 +189,110 @@ class Coppock_Curve:
         :return: pandas.DataFrame
         """
         return TA.COPP(df)
+
+
 class ROC:
     """
     Rate of Change
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 1):
-        M = df['close'].diff(n-1)
-        N = df['close'].shift(n-1)
-        ROC = pd.Series(M/N)
+    def calculate(df: pd.DataFrame, n: int = 1):
+        M = df['close'].diff(n - 1)
+        N = df['close'].shift(n - 1)
+        ROC = pd.Series(M / N)
         return ROC
-        
+
 
 class TRIMA:
     """
     Triple Exponential Moving Average    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 18):
-        return TA.TRIMA(df,n)
+    def calculate(df: pd.DataFrame, n: int = 18):
+        return TA.TRIMA(df, n)
+
 
 class VWAP:
     """
     Volume Weighted Average Price    
     """
+
     @staticmethod
     def calculate(df: pd.DataFrame):
         return TA.VWAP(df)
+
 
 class ER:
     """
     Kaufman Efficiency Indicator
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame,n:int = 10):
-        return TA.ER(df,n)
+    def calculate(df: pd.DataFrame, n: int = 10):
+        return TA.ER(df, n)
+
 
 class TRIX:
     """
     Trix    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 20):
-        return TA.TRIX(df,n)
+    def calculate(df: pd.DataFrame, n: int = 20):
+        return TA.TRIX(df, n)
+
 
 class Qstick:
     """
     Quickstick    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 14):
-        return TA.QSTICK(df,n)
+    def calculate(df: pd.DataFrame, n: int = 14):
+        return TA.QSTICK(df, n)
+
 
 class EFI:
     """
     Elder's Force Index    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 13):
-        return TA.EFI(df,n)
+    def calculate(df: pd.DataFrame, n: int = 13):
+        return TA.EFI(df, n)
+
 
 class FISH:
     """
     Fisher Transform    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 13):
-        return TA.FISH(df,n)
+    def calculate(df: pd.DataFrame, n: int = 13):
+        return TA.FISH(df, n)
+
 
 class CMO:
     """
     Chande Moving Oscillator    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, n:int = 9,factor:int =100):
-        return TA.CMO(df,n,factor)
+    def calculate(df: pd.DataFrame, n: int = 9, factor: int = 100):
+        return TA.CMO(df, n, factor)
+
 
 class KAMA:
     """
     Kaufman's adaptive moving average    
     """
+
     @staticmethod
-    def calculate(df: pd.DataFrame, er:int = 10,ema_fast:int =2, ema_slow:int=30, period:int = 20):
-        return TA.KAMA(df,er,ema_fast,ema_slow,period)
+    def calculate(df: pd.DataFrame, er: int = 10, ema_fast: int = 2, ema_slow: int = 30, period: int = 20):
+        return TA.KAMA(df, er, ema_fast, ema_slow, period)
+
 
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
@@ -263,26 +302,24 @@ if __name__ == '__main__':
     # values['mdd'] = RollingMDD.calculate(df)
     values['OBV'] = OBV.calculate(df)
     values['rsi'] = RSI.calculate(df)
-    values['stochastic_oscillator'],_ = Stochastic_Oscillator.calculate(df)
+    values['stochastic_oscillator'], _ = StochasticOscillator.calculate(df)
     values['chaikin'] = Chaikin.calculate(df)
-    values['accumulation_distribution'] = Accumulation_Distribution.calculate(df)
-    values['money_flow_index'] = Money_Flow_Index.calculate(df)
-    values['commodity_chanel_index'] = Commodity_Chanel_Index.calculate(df)
-    values['ease_of_movement'] = Ease_of_Movement.calculate(df,1)
-    values['coppock_curve'] = Coppock_Curve.calculate(df)
+    values['accumulation_distribution'] = AccumulationDistribution.calculate(df)
+    values['money_flow_index'] = MoneyFlowIndex.calculate(df)
+    values['commodity_chanel_index'] = CommodityChannelIndex.calculate(df)
+    values['ease_of_movement'] = EaseOfMovement.calculate(df, 1)
+    values['coppock_curve'] = CoppockCurve.calculate(df)
     # values['MACD'] = MACD.calculate(df)
-    values['ROC'] = ROC.calculate(df,1)
-    values['TRIMA'] = TRIMA.calculate(df,1)
-    values['TRIX'] = TRIX.calculate(df,1)
+    values['ROC'] = ROC.calculate(df, 1)
+    values['TRIMA'] = TRIMA.calculate(df, 1)
+    values['TRIX'] = TRIX.calculate(df, 1)
     values['VWAP'] = VWAP.calculate(df)
     values['ER'] = ER.calculate(df)
-    values['Qstick'] = Qstick.calculate(df,5)
+    values['Qstick'] = Qstick.calculate(df, 5)
     values['EFI'] = EFI.calculate(df)
     values['FISH'] = FISH.calculate(df)
     values['CMO'] = CMO.calculate(df)
     values['KAMA'] = KAMA.calculate(df)
-
-
 
     # values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
