@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
-
+import ta
+from finta import TA
 from price_data import read_price_data
 from util import plot_grid
+
 
 
 class RollingMDD:
@@ -84,7 +86,28 @@ class OBV:
         copy = df.copy()
         return (np.sign(copy['close'].diff())*copy['volume']).fillna(0).cumsum()
 
+class Chaikin:
+    def calculate(df):
+        """Calculate Chaikin Oscillator for given data.
+        
+        :param df: pandas.DataFrame
+        :return: pandas.DataFrame
+        """
+        ad = (2 * df['close'] - df['high'] - df['low']) / (df['high'] - df['low']) * df['volume']
+        Chaikin = pd.Series(ad.ewm(span=3, min_periods=3).mean() - ad.ewm(span=10, min_periods=10).mean(), name='Chaikin')
+        # df = df.join(Chaikin)
+        return Chaikin
 
+class Accumulation_Distribution:
+    def calculate(df):
+        """Calculate Accumulation/Distribution for given data.
+        
+        :param df: pandas.DataFrame
+        :param n: 
+        :return: pandas.DataFrame
+        """
+
+        return TA.ADL(df)
 
 class MACD:
 
@@ -97,16 +120,75 @@ class MACD:
         trigger = MACD - signal
         return trigger
 
+class Money_Flow_Index:
+    def calculate(df):
+        #return ta.volume.MFIIndicator(df['high'],df['low'],df['close'],df['volume'],n)
+        return TA.MFI(df)
+
+# class Money_Flow_Index:
+#     def calculate(df, n=14):
+#         typical_price = (df.high + df.low + df.close)/3
+#         money_flow = typical_price * df.volume
+#         mf_sign = np.where(typical_price > typical_price.shift(1), 1, -1)
+#         signed_mf = money_flow * mf_sign
+#         mf_avg_gain = signed_mf.rolling(n).apply(gain, raw=True)
+#         mf_avg_loss = signed_mf.rolling(n).apply(loss, raw=True)
+#         return (100 - (100 / (1 + (mf_avg_gain / abs(mf_avg_loss))))).to_numpy()
+
+
+class Ease_of_Movement:
+    def calculate(df, n):
+        """Calculate Ease of Movement for given data.
+        
+        :param df: pandas.DataFrame
+        :param n: 
+        :return: pandas.DataFrame
+        """
+        EoM = (df['high'].diff(1) + df['low'].diff(1)) * (df['high'] - df['low']) / (2 * df['volume'])
+        Eom_ma = pd.Series(EoM.rolling(n, min_periods=n).mean(), name='EoM_' + str(n))
+        return Eom_ma
+
+class Commodity_Chanel_Index:
+    def calculate(df):
+        """Calculate Commodity Channel Index for given data.
+        
+        :param df: pandas.DataFrame
+        :param n: 
+        :return: pandas.DataFrame
+        """
+        # PP = (df['high'] + df['low'] + df['close']) / 3
+        # CCI = pd.Series((PP - PP.rolling(n, min_periods=n).mean()) / PP.rolling(n, min_periods=n).std(),
+        #                 name='CCI_' + str(n))
+        # return CCI
+        return TA.CCI(df)
+
+class Coppock_Curve:
+    def calculate(df):
+        """Calculate Coppock Curve for given data.
+        
+        :param df: pandas.DataFrame
+        :param n: 
+        :return: pandas.DataFrame
+        """
+        return TA.COPP(df)
 
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
-    values['close'] = df['close']
-    values['volatility'] = Volatility.calculate(df)
+    # values['close'] = df['close']
+    # values['volatility'] = Volatility.calculate(df)
+    # values['mdd'] = RollingMDD.calculate(df)
     values['OBV'] = OBV.calculate(df)
-    values['mdd'] = RollingMDD.calculate(df)
-    values['MACD'] = MACD.calculate(df)
-    values['var_90'] = VaR.calculate(df, 1).var_90.values
+    values['rsi'] = RSI.calculate(df)
+    values['stochastic_oscillator'],_ = Stochastic_Oscillator.calculate(df)
+    values['chaikin'] = Chaikin.calculate(df)
+    values['accumulation_distribution'] = Accumulation_Distribution.calculate(df)
+    values['money_flow_index'] = Money_Flow_Index.calculate(df)
+    values['commodity_chanel_index'] = Commodity_Chanel_Index.calculate(df)
+    values['ease_of_movement'] = Ease_of_Movement.calculate(df,1)
+    values['coppock_curve'] = Coppock_Curve.calculate(df)
+    # values['MACD'] = MACD.calculate(df)
+    # values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values['timestamp'] = pd.to_datetime(values['timestamp'])
     values = values.set_index('timestamp')
