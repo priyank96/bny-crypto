@@ -7,4 +7,5 @@ dependencies:
   - pandas-bokeh
   - scipy
   - scikit-learn
+  - finta
 prefix: C:\Users\admin\anaconda3\envs\capstone
