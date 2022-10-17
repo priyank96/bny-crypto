@@ -189,7 +189,6 @@ if __name__ == '__main__':
 
 
 
-
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values['timestamp'] = pd.to_datetime(values['timestamp'])
