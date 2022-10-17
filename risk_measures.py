@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
+from finta import TA
+
 
 from price_data import read_price_data
 from util import plot_grid
@@ -83,6 +85,89 @@ class MACD:
         trigger = MACD - signal
         return trigger
 
+class ROC:
+    """
+    Rate of Change
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 1):
+        M = df['close'].diff(n-1)
+        N = df['close'].shift(n-1)
+        ROC = pd.Series(M/N)
+        return ROC
+        
+
+class TRIMA:
+    """
+    Triple Exponential Moving Average    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 18):
+        return TA.TRIMA(df,n)
+
+class VWAP:
+    """
+    Volume Weighted Average Price    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame):
+        return TA.VWAP(df)
+
+class ER:
+    """
+    Kaufman Efficiency Indicator
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame,n:int = 10):
+        return TA.ER(df,n)
+
+class TRIX:
+    """
+    Trix    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 20):
+        return TA.TRIX(df,n)
+
+class Qstick:
+    """
+    Quickstick    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 14):
+        return TA.QSTICK(df,n)
+
+class EFI:
+    """
+    Elder's Force Index    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 13):
+        return TA.EFI(df,n)
+
+class FISH:
+    """
+    Fisher Transform    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 13):
+        return TA.FISH(df,n)
+
+class CMO:
+    """
+    Chande Moving Oscillator    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, n:int = 9,factor:int =100):
+        return TA.CMO(df,n,factor)
+
+class KAMA:
+    """
+    Kaufman's adaptive moving average    
+    """
+    @staticmethod
+    def calculate(df: pd.DataFrame, er:int = 10,ema_fast:int =2, ema_slow:int=30, period:int = 20):
+        return TA.KAMA(df,er,ema_fast,ema_slow,period)
 
 if __name__ == '__main__':
     df = read_price_data('BTC', '2021-01-01', '2021-10-20', 'Daily')
@@ -91,6 +176,20 @@ if __name__ == '__main__':
     values['volatility'] = Volatility.calculate(df)
     values['mdd'] = RollingMDD.calculate(df)
     values['MACD'] = MACD.calculate(df)
+    values['ROC'] = ROC.calculate(df,1)
+    values['TRIMA'] = TRIMA.calculate(df,1)
+    values['TRIX'] = TRIX.calculate(df,1)
+    values['VWAP'] = VWAP.calculate(df)
+    values['ER'] = ER.calculate(df)
+    values['Qstick'] = Qstick.calculate(df,5)
+    values['EFI'] = EFI.calculate(df)
+    values['FISH'] = FISH.calculate(df)
+    values['CMO'] = CMO.calculate(df)
+    values['KAMA'] = KAMA.calculate(df)
+
+
+
+
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values['timestamp'] = pd.to_datetime(values['timestamp'])
