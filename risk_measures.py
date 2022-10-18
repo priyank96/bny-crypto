@@ -294,12 +294,148 @@ class KAMA:
         return TA.KAMA(df, er, ema_fast, ema_slow, period)
 
 
+class AverageTrueRange:
+    """
+    Average True Range:
+    The indicator provide an indication of the degree of price volatility.
+    Strong moves, in either direction, are often accompanied by large ranges, or large True Ranges.
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window=14):
+        atr = ta.volatility.AverageTrueRange(high=df.high, low=df.low, close=df.close, window=window)
+        return atr.average_true_range()
+
+
+class UlcerIndex:
+    """
+    Ulcer Index:
+    https://school.stockcharts.com/doku.php?id=technical_indicators:ulcer_index
+    concerned with measuring maximum drawdown
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window: int = 14):
+        ui = ta.volatility.UlcerIndex(close=df.close, window=window)
+        return ui.ulcer_index()
+
+
+class NegativeVolumeIndex:
+    """
+    Negative Volume Index Indicator
+    https://school.stockcharts.com/doku.php?id=technical_indicators:negative_volume_inde
+    The Negative Volume Index (NVI) is a cumulative indicator that uses the change in volume to decide
+    when the smart money is active.
+    Paul Dysart first developed this indicator in the 1930s.
+    Dysart's Negative Volume Index works under the assumption that the smart money is active on days when
+    volume decreases and the not-so-smart money is active on days when volume increases.
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame):
+        nvi = ta.volume.NegativeVolumeIndexIndicator(close=df.close, volume=df.volume)
+        return nvi.negative_volume_index()
+
+
+class ADX:
+    """
+    Average Directional Movement Index (ADX)
+    https://school.stockcharts.com/doku.php?id=technical_indicators:average_directional_index_adx
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window: int = 14):
+        adx = ta.trend.ADXIndicator(high=df.high, low=df.low, close=df.close, window=window)
+        return adx.adx()
+
+
+class AroonIndicator:
+    """
+    Aroon Indicator
+    Identify when trends are likely to change direction.
+    Aroon Up = ((N - Days Since N-day High) / N) x 100
+    Aroon Down = ((N - Days Since N-day Low) / N) x 100
+    Aroon Indicator = Aroon Up - Aroon Down
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window: int = 25):
+        ai = ta.trend.AroonIndicator(close=df.close, window=window)
+        return ai.aroon_indicator()
+
+
+class DPOI:
+    """
+    Detrend Price Oscillator:
+    Is an indicator designed to remove trend from price and make it easier to identify cycles.
+    http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:detrended_price_osci
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window: int = 20):
+        dpoi = ta.trend.DPOIndicator(close=df.close, window=window)
+        return dpoi.dpo()
+
+
+class MassIndex:
+    """
+    Mass Index (MI)
+    It uses the high-low range to identify trend reversals based on range expansions.
+    It identifies range bulges that can foreshadow a reversal of the current trend.
+    http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:mass_index
+    """
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window_fast: int = 9, window_slow: int = 25):
+        mi = ta.trend.MassIndex(high=df.high, low=df.low, window_fast=window_fast, window_slow=window_slow)
+        return mi.mass_index()
+
+
+class VortexIndicator:
+    """
+    Vortex Indicator
+    It consists of two oscillators that capture positive and negative trend movement.
+    A bullish signal triggers when the positive trend indicator crosses above the negative trend indicator or a key level.
+    http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:vortex_indicator
+    """
+
+    @staticmethod
+    def calculate(df, window: int = 14):
+        vi = ta.trend.VortexIndicator(high=df.high, low=df.low, close=df.close, window=window)
+        return vi.vortex_indicator_diff()
+
+
+class AwesomeOscillator:
+    """
+    Awesome Oscillator
+    From: https://www.tradingview.com/wiki/Awesome_Oscillator_(AO)
+    The Awesome Oscillator is an indicator used to measure market momentum.
+    AO calculates the difference of a 34 Period and 5 Period Simple Moving Averages.
+    The Simple Moving Averages that are used are not calculated using closing price but rather each bar’s midpoints.
+    AO is generally used to affirm trends or to anticipate possible reversals.
+    """
+
+    @staticmethod
+    def calculate(df, window1: int = 5, window2: int = 34):
+        ao = ta.momentum.AwesomeOscillatorIndicator(high=df.high, low=df.low, window1=window1, window2=window2)
+        return ao.awesome_oscillator()
+
+
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
-    # values['close'] = df['close']
-    # values['volatility'] = Volatility.calculate(df)
-    # values['mdd'] = RollingMDD.calculate(df)
+    values['close'] = df['close']
+    values['Awesome Oscillator'] = AwesomeOscillator.calculate(df)
+    values['Vortex Indicator'] = VortexIndicator.calculate(df)
+    values['Mass Index'] = MassIndex.calculate(df)
+    values['Detrend Price Oscillator'] = DPOI.calculate(df)
+    values['Avg True Range'] = AverageTrueRange.calculate(df)
+    values['Ulcer Index'] = UlcerIndex.calculate(df)
+    values['Negative Volume Index'] = NegativeVolumeIndex.calculate(df)
+    values['ADX'] = ADX.calculate(df)
+    values['Aroon Indicator'] = AroonIndicator.calculate(df)
+    values['volatility'] = Volatility.calculate(df)
+    values['mdd'] = RollingMDD.calculate(df)
     values['OBV'] = OBV.calculate(df)
     values['rsi'] = RSI.calculate(df)
     values['stochastic_oscillator'], _ = StochasticOscillator.calculate(df)
@@ -309,7 +445,7 @@ if __name__ == '__main__':
     values['commodity_chanel_index'] = CommodityChannelIndex.calculate(df)
     values['ease_of_movement'] = EaseOfMovement.calculate(df, 1)
     values['coppock_curve'] = CoppockCurve.calculate(df)
-    # values['MACD'] = MACD.calculate(df)
+    values['MACD'] = MACD.calculate(df)
     values['ROC'] = ROC.calculate(df, 1)
     values['TRIMA'] = TRIMA.calculate(df, 1)
     values['TRIX'] = TRIX.calculate(df, 1)
@@ -321,7 +457,7 @@ if __name__ == '__main__':
     values['CMO'] = CMO.calculate(df)
     values['KAMA'] = KAMA.calculate(df)
 
-    # values['var_90'] = VaR.calculate(df, 1).var_90.values
+    values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values['timestamp'] = pd.to_datetime(values['timestamp'])
     values = values.set_index('timestamp')
