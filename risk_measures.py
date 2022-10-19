@@ -638,6 +638,24 @@ class FearOrGreed:
                     ret_list.append(d['value'])
         return ret_list
 
+class ICHIMOKU:
+    """
+    ICHIMOKU Cloud
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 40, adjust: bool = True
+        return TA.ICHIMOKU(df)
+
+def standard_deviation(df, n):
+    """Calculate Standard Deviation for given data.
+    
+    :param df: pandas.DataFrame
+    :param n: 
+    :return: pandas.DataFrame
+    """
+    return df['close'].rolling(n, min_periods=n).std()
+
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
@@ -696,6 +714,8 @@ if __name__ == '__main__':
     # Ranadeep
     values[['BBANDS BB_UPPER', 'BBANDS BB_MIDDLE', 'BBANDS BB_LOWER']] = BBANDS.calculate(df)
     values['FearOrGreed Index'] = FearOrGreed().calculate(df)
+    values[['Ichimoku TENKAN', 'Ichimoku KIJUN', 'Ichimoku senkou_span_a', 'Ichimoku SENKOU', 'Ichimoku CHIKOU']] = ICHIMOKU.calculate(df)
+    values['Standard Deviation'] = standard_deviation(df, 5)
 
     
 
