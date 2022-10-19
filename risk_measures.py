@@ -607,6 +607,16 @@ class BASPN:
     def calculate(df):      # period: int = 40, adjust: bool = True
         return TA.BASPN(df)
 
+class BBANDS:
+    """
+    Bollinger Bands
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 40, adjust: bool = True
+        return TA.BBANDS(df)
+
+
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
@@ -652,15 +662,15 @@ if __name__ == '__main__':
     values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
     values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
 
-    values['CHANDELIER'] = Chandelier.calculate(df)
+    values[['CHANDELIER Short', 'CHANDELIER Long']] = Chandelier.calculate(df)
     values['WILLIAMS'] = Williams.calculate(df)
-    values['WILLIAMS_FRACTAL'] = Williams_Fractal_Indicator.calculate(df)
+    values[['WILLIAMS_FRACTAL BearishFractal', 'WILLIAMS_FRACTAL BullishFractal']] = Williams_Fractal_Indicator.calculate(df)
     values['VZO'] = Volume_Zone_Oscillator.calculate(df)
     values['VPT'] = Volume_Price_Trend.calculate(df)
     values['FVE'] = Finite_Volume_Element.calculate(df)
     values['STOCHRSI'] = StochRSI.calculate(df)
-    values['SAR'] = SAR.calculate(df)
-    values['BASPN'] = BASPN.calculate(df)
+    # values['SAR'] = SAR.calculate(df)
+    values[['BASPN Buy', 'BASPN Sell']] = BASPN.calculate(df)
 
 
     values['var_90'] = VaR.calculate(df, 1).var_90.values
