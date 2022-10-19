@@ -7,6 +7,9 @@ from scipy.stats import norm
 from price_data import read_price_data
 from util import plot_grid
 
+import requests
+from datetime import datetime
+
 
 class RollingMDD:
     """
@@ -617,6 +620,24 @@ class BBANDS:
         return TA.BBANDS(df)
 
 
+class FearOrGreed:
+    """
+    Ref API: https://alternative.me/crypto/fear-and-greed-index/
+    """
+
+    def __init__(self):
+        self.data = requests.get('https://api.alternative.me/fng/?limit=0&date_format=us').json()['data']
+
+    def calculate(self, df):
+
+        ret_list = list()
+        for i in range(len(df)):
+            df_date = datetime.strptime(df.iloc[i]['timestamp'],'%Y-%m-%d')
+            for d in self.data:
+                if datetime.strptime(d['timestamp'],'%m-%d-%Y') == df_date:
+                    ret_list.append(d['value'])
+        return ret_list
+
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
@@ -671,6 +692,12 @@ if __name__ == '__main__':
     values['STOCHRSI'] = StochRSI.calculate(df)
     # values['SAR'] = SAR.calculate(df)
     values[['BASPN Buy', 'BASPN Sell']] = BASPN.calculate(df)
+
+    # Ranadeep
+    values[['BBANDS BB_UPPER', 'BBANDS BB_MIDDLE', 'BBANDS BB_LOWER']] = BBANDS.calculate(df)
+    values['FearOrGreed Index'] = FearOrGreed().calculate(df)
+
+    
 
 
     values['var_90'] = VaR.calculate(df, 1).var_90.values
