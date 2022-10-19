@@ -47,5 +47,31 @@ def plot_grid(df: pd.DataFrame, event_lines: pd.DataFrame = None):
     show(gridplot(figs, sizing_mode='scale_both', merge_tools=True, ncols=1, width=1500, height=200))
 
 
-def plot(df: pd.DataFrame):
-    df.plot_bokeh(figsize=(1500, 750))
+def plot(df: pd.DataFrame, event_lines: pd.DataFrame = None):
+    color = itertools.cycle(palette)
+    crosshair = CrosshairTool(dimensions="both")
+    hover = HoverTool(tooltips=[('Time', '$x{%F}'),
+                                ('value', '$y')],
+                      formatters={'$x': 'datetime'},
+                      mode='mouse',
+                      line_policy='nearest')
+    fig = figure(x_axis_type='datetime', width=1500, height=600)
+    fig.add_tools(crosshair)
+    fig.add_tools(hover)
+
+    for i, c in enumerate(df.columns):
+        fig.line(x=df.index.values, y=df[c], color=next(color), legend_label=c)
+
+    if event_lines is not None:
+        vlines = []
+        for index, row in event_lines.iterrows():
+            if row['sentiment'] == 1:
+                color = 'green'
+            else:
+                color = 'red'
+            vlines.append(Span(location=index, dimension='height', line_color=color, line_width=1))
+
+        for vline in vlines:
+            fig.add_layout(vline)
+    show(fig)
+
