@@ -134,3 +134,6 @@ dmypy.json
 *.json
 *.csv
 *.log
+*.zip
+
+__pycache__/
