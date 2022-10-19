@@ -497,8 +497,8 @@ class HullMovingAvg:
 class ZeroLagExpMovingAvg:
 
     @staticmethod
-    def calculate(df):
-        return TA.ZLEMA(df)
+    def calculate(df, period: int = 26):
+        return TA.ZLEMA(df, period=period)
 
 
 class InverseFisherTransformRSI:
