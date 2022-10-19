@@ -507,6 +507,105 @@ class InverseFisherTransformRSI:
     def calculate(df):
         return TA.IFT_RSI(df)
 
+class Chandelier:
+    """
+    Chandelier Exit (CE) is a volatility-based indicator that identifies stop loss exit points for long and short trading positions. 
+    Chandelier Exit Long: n-day Highest High – ATR (n) x Multiplier
+    Chandelier Exit Short: n-day Lowest Low + ATR (n) x Multiplier
+    Where:
+    N is the default unit period of 22 or the number that the trader chooses.
+    The multiplier is the default 3.0 Average True Range.
+    """
+
+    @staticmethod
+    def calculate(df):      # short_period: int = 22, long_period: int = 22, k: int = 3,
+        return TA.CHANDELIER(df)
+
+class Williams:
+    """
+    Williams %R, or just %R, is a technical analysis oscillator showing the current closing price in relation to the high and low
+    of the past N days (for a given N). It was developed by a publisher and promoter of trading materials, Larry Williams.
+    Its purpose is to tell whether a stock or commodity market is trading near the high or the low, or somewhere in between,
+    of its recent trading range.
+    The oscillator is on a negative scale, from −100 (lowest) up to 0 (highest).
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 14
+        return TA.WILLIAMS(df)
+
+class Williams_Fractal_Indicator:
+    """
+    Williams Fractal Indicator
+    Source: https://www.investopedia.com/terms/f/fractal.asp
+    :param DataFrame ohlc: data
+    :param int period: how many lower highs/higher lows the extremum value should be preceded and followed.
+    :return DataFrame: fractals identified by boolean
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 2
+        return TA.WILLIAMS_FRACTAL(df)
+
+class Volume_Zone_Oscillator:
+    """VZO uses price, previous price and moving averages to compute its oscillating value.
+    It is a leading indicator that calculates buy and sell signals based on oversold / overbought conditions.
+    Oscillations between the 5% and 40% levels mark a bullish trend zone, while oscillations between -40% and 5% mark a bearish trend zone.
+    Meanwhile, readings above 40% signal an overbought condition, while readings above 60% signal an extremely overbought condition.
+    Alternatively, readings below -40% indicate an oversold condition, which becomes extremely oversold below -60%."""
+
+    @staticmethod
+    def calculate(df):      # period: int = 14, column: str = "close", adjust: bool = True,
+        return TA.VZO(df)
+
+class Volume_Price_Trend:
+    """
+    Volume Price Trend
+    The Volume Price Trend uses the difference of price and previous price with volume and feedback to arrive at its final form.
+    If there appears to be a bullish divergence of price and the VPT (upward slope of the VPT and downward slope of the price) a buy opportunity exists.
+    Conversely, a bearish divergence (downward slope of the VPT and upward slope of the price) implies a sell opportunity.
+    """
+
+    @staticmethod
+    def calculate(df):
+        return TA.VPT(df)
+
+class Finite_Volume_Element:
+    """
+    FVE is a technical indicator, but it has two important innovations: first, the F VE takes into account both intra and
+    interday price action, and second, minimal price changes are taken into account by introducing a price threshold.
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 22, factor: int = 0.3
+        return TA.FVE(df)
+
+class StochRSI:
+    """StochRSI is an oscillator that measures the level of RSI relative to its high-low range over a set time period.
+    StochRSI applies the Stochastics formula to RSI values, instead of price values. This makes it an indicator of an indicator.
+    The result is an oscillator that fluctuates between 0 and 1."""
+
+    @staticmethod
+    def calculate(df):      # rsi_period: int = 14, stoch_period: int = 14
+        return TA.STOCHRSI(df)
+
+class SAR:
+    """SAR stands for “stop and reverse,” which is the actual indicator used in the system.
+    SAR trails price as the trend extends over time. The indicator is below prices when prices are rising and above prices when prices are falling.
+    In this regard, the indicator stops and reverses when the price trend reverses and breaks above or below the indicator."""
+
+    @staticmethod
+    def calculate(df):      # af: int = 0.02, amax: int = 0.2
+        return TA.SAR(df)
+
+class BASPN:
+    """
+    Normalized BASP indicator
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 40, adjust: bool = True
+        return TA.BASPN(df)
 
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
@@ -552,6 +651,17 @@ if __name__ == '__main__':
     values["HMA"] = HullMovingAvg.calculate(df)
     values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
     values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
+
+    values['CHANDELIER'] = Chandelier.calculate(df)
+    values['WILLIAMS'] = Williams.calculate(df)
+    values['WILLIAMS_FRACTAL'] = Williams_Fractal_Indicator.calculate(df)
+    values['VZO'] = Volume_Zone_Oscillator.calculate(df)
+    values['VPT'] = Volume_Price_Trend.calculate(df)
+    values['FVE'] = Finite_Volume_Element.calculate(df)
+    values['STOCHRSI'] = StochRSI.calculate(df)
+    values['SAR'] = SAR.calculate(df)
+    values['BASPN'] = BASPN.calculate(df)
+
 
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
