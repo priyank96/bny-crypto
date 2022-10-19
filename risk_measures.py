@@ -420,6 +420,7 @@ class AwesomeOscillator:
         ao = ta.momentum.AwesomeOscillatorIndicator(high=df.high, low=df.low, window1=window1, window2=window2)
         return ao.awesome_oscillator()
 
+
 class PivotPoints:
     """
     Pivot Point
@@ -433,6 +434,7 @@ class PivotPoints:
     def calculate(df):
         return TA.PIVOT(df)['pivot']
 
+
 class FibonacciPivotPoints:
     """
     Fibonacci Pivot Points(https://www.babypips.com/learn/forex/other-pivot-point-calculation-methods)
@@ -441,9 +443,11 @@ class FibonacciPivotPoints:
     Next, multiply the previous day’s range with its corresponding Fibonacci level. Most traders use the 38.2%, 61.8% and 100% retracements in their calculations.
     Finally, add or subtract the figures you get to the pivot point and voila, you’ve got your Fibonacci pivot point levels!
     """
+
     @staticmethod
     def calculate(df):
         return TA.PIVOT_FIB(df)['pivot']
+
 
 class MomentumBreakoutBands:
     """
@@ -452,9 +456,11 @@ class MomentumBreakoutBands:
     These bands are bollinger bands that have an adjusted standard deviation. There are Buy signals when it has momentum breakouts above 
     the bands for moves to the upside and Sell signals when it has momentum breakouts below the bands for moves to the downside.
     """
+
     @staticmethod
     def calculate(df):
         return TA.MOBO(df)["BB_MIDDLE"]
+
 
 class KeltnerChannels:
     """
@@ -462,18 +468,21 @@ class KeltnerChannels:
 
     Keltner Channels are volatility-based bands that are placed on either side of an asset's price and can aid in determining the direction of a trend
     """
-    
+
     @staticmethod
     def calculate(df):
         return TA.KC(df)["KC_UPPER"]
+
 
 class TrueStrengthIndex:
     """
     True Strength Indicator
     """
+
     @staticmethod
     def calculate(df):
         return TA.TSI(df)["TSI"]
+
 
 class HullMovingAvg:
     """
@@ -484,17 +493,20 @@ class HullMovingAvg:
     def calculate(df):
         return TA.HMA(df)
 
+
 class ZeroLagExpMovingAvg:
 
     @staticmethod
     def calculate(df):
         return TA.ZLEMA(df)
 
+
 class InverseFisherTransformRSI:
 
     @staticmethod
     def calculate(df):
         return TA.IFT_RSI(df)
+
 
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
@@ -540,7 +552,6 @@ if __name__ == '__main__':
     values["HMA"] = HullMovingAvg.calculate(df)
     values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
     values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
-    
 
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
