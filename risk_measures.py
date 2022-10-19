@@ -420,6 +420,81 @@ class AwesomeOscillator:
         ao = ta.momentum.AwesomeOscillatorIndicator(high=df.high, low=df.low, window1=window1, window2=window2)
         return ao.awesome_oscillator()
 
+class PivotPoints:
+    """
+    Pivot Point
+    A pivot point is a technical analysis indicator, or calculations, used to determine the overall trend of the market 
+    over different time frames. The pivot point itself is simply the average of the intraday high and low, and the closing
+    price from the previous trading day. On the subsequent day, trading above the pivot point is thought to indicate ongoing 
+    bullish sentiment, while trading below the pivot point indicates bearish sentiment.
+    """
+
+    @staticmethod
+    def calculate(df):
+        return TA.PIVOT(df)['pivot']
+
+class FibonacciPivotPoints:
+    """
+    Fibonacci Pivot Points(https://www.babypips.com/learn/forex/other-pivot-point-calculation-methods)
+
+    Fibonacci pivot point levels are determined by first calculating the pivot point like you would the standard method.
+    Next, multiply the previous day’s range with its corresponding Fibonacci level. Most traders use the 38.2%, 61.8% and 100% retracements in their calculations.
+    Finally, add or subtract the figures you get to the pivot point and voila, you’ve got your Fibonacci pivot point levels!
+    """
+    @staticmethod
+    def calculate(df):
+        return TA.PIVOT_FIB(df)['pivot']
+
+class MomentumBreakoutBands:
+    """
+    Momentum Breakout Bands
+
+    These bands are bollinger bands that have an adjusted standard deviation. There are Buy signals when it has momentum breakouts above 
+    the bands for moves to the upside and Sell signals when it has momentum breakouts below the bands for moves to the downside.
+    """
+    @staticmethod
+    def calculate(df):
+        return TA.MOBO(df)["BB_MIDDLE"]
+
+class KeltnerChannels:
+    """
+    Keltner Channels
+
+    Keltner Channels are volatility-based bands that are placed on either side of an asset's price and can aid in determining the direction of a trend
+    """
+    
+    @staticmethod
+    def calculate(df):
+        return TA.KC(df)["KC_UPPER"]
+
+class TrueStrengthIndex:
+    """
+    True Strength Indicator
+    """
+    @staticmethod
+    def calculate(df):
+        return TA.TSI(df)["TSI"]
+
+class HullMovingAvg:
+    """
+    Hull Moving Average
+    """
+
+    @staticmethod
+    def calculate(df):
+        return TA.HMA(df)
+
+class ZeroLagExpMovingAvg:
+
+    @staticmethod
+    def calculate(df):
+        return TA.ZLEMA(df)
+
+class InverseFisherTransformRSI:
+
+    @staticmethod
+    def calculate(df):
+        return TA.IFT_RSI(df)
 
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
@@ -457,8 +532,19 @@ if __name__ == '__main__':
     values['CMO'] = CMO.calculate(df)
     values['KAMA'] = KAMA.calculate(df)
 
+    values["PIVOT"] = PivotPoints.calculate(df)
+    values["PIVOT_FIB"] = FibonacciPivotPoints.calculate(df)
+    values["MOBO"] = MomentumBreakoutBands.calculate(df)
+    values["KC"] = KeltnerChannels.calculate(df)
+    values["TSI"] = TrueStrengthIndex.calculate(df)
+    values["HMA"] = HullMovingAvg.calculate(df)
+    values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
+    values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
+    
+
     values['var_90'] = VaR.calculate(df, 1).var_90.values
     values['timestamp'] = df['timestamp']
     values['timestamp'] = pd.to_datetime(values['timestamp'])
+
     values = values.set_index('timestamp')
     plot_grid(values)
