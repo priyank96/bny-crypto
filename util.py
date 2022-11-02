@@ -1,11 +1,10 @@
 import itertools
 
 import pandas as pd
-import pandas_bokeh
-from bokeh.plotting import figure, show
-from bokeh.palettes import Dark2_5 as palette
-from bokeh.models import CrosshairTool, HoverTool, Span
 from bokeh.layouts import gridplot
+from bokeh.models import CrosshairTool, HoverTool, Span
+from bokeh.palettes import Dark2_5 as palette
+from bokeh.plotting import figure, show
 
 
 def plot_grid(df: pd.DataFrame, event_lines: pd.DataFrame = None):
@@ -35,7 +34,9 @@ def plot_grid(df: pd.DataFrame, event_lines: pd.DataFrame = None):
     if event_lines is not None:
         vlines = []
         for index, row in event_lines.iterrows():
-            if row['sentiment'] == 1:
+            if pd.isnull(row['sentiment']):
+                color = 'purple'
+            elif row['sentiment'] == 1:
                 color = 'green'
             else:
                 color = 'red'
@@ -65,7 +66,7 @@ def plot(df: pd.DataFrame, event_lines: pd.DataFrame = None):
     if event_lines is not None:
         vlines = []
         for index, row in event_lines.iterrows():
-            if row['sentiment'] == 1:
+            if row.get('sentiment', 0) == 1:
                 color = 'green'
             else:
                 color = 'red'
@@ -74,4 +75,3 @@ def plot(df: pd.DataFrame, event_lines: pd.DataFrame = None):
         for vline in vlines:
             fig.add_layout(vline)
     show(fig)
-
