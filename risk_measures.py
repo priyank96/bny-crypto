@@ -7,6 +7,9 @@ from scipy.stats import norm
 from price_data import read_price_data
 from util import plot_grid
 
+import requests
+from datetime import datetime
+
 
 class RollingMDD:
     """
@@ -607,6 +610,52 @@ class BASPN:
     def calculate(df):      # period: int = 40, adjust: bool = True
         return TA.BASPN(df)
 
+class BBANDS:
+    """
+    Bollinger Bands
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 40, adjust: bool = True
+        return TA.BBANDS(df)
+
+
+class FearOrGreed:
+    """
+    Ref API: https://alternative.me/crypto/fear-and-greed-index/
+    """
+
+    def __init__(self):
+        self.data = requests.get('https://api.alternative.me/fng/?limit=0&date_format=us').json()['data']
+
+    def calculate(self, df):
+
+        ret_list = list()
+        for i in range(len(df)):
+            df_date = datetime.strptime(df.iloc[i]['timestamp'],'%Y-%m-%d')
+            for d in self.data:
+                if datetime.strptime(d['timestamp'],'%m-%d-%Y') == df_date:
+                    ret_list.append(d['value'])
+        return ret_list
+
+class ICHIMOKU:
+    """
+    ICHIMOKU Cloud
+    """
+
+    @staticmethod
+    def calculate(df):      # period: int = 40, adjust: bool = True
+        return TA.ICHIMOKU(df)
+
+def standard_deviation(df, n):
+    """Calculate Standard Deviation for given data.
+    
+    :param df: pandas.DataFrame
+    :param n: 
+    :return: pandas.DataFrame
+    """
+    return df['close'].rolling(n, min_periods=n).std()
+
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
@@ -652,15 +701,23 @@ if __name__ == '__main__':
     values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
     values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
 
-    values['CHANDELIER'] = Chandelier.calculate(df)
+    values[['CHANDELIER Short', 'CHANDELIER Long']] = Chandelier.calculate(df)
     values['WILLIAMS'] = Williams.calculate(df)
-    values['WILLIAMS_FRACTAL'] = Williams_Fractal_Indicator.calculate(df)
+    values[['WILLIAMS_FRACTAL BearishFractal', 'WILLIAMS_FRACTAL BullishFractal']] = Williams_Fractal_Indicator.calculate(df)
     values['VZO'] = Volume_Zone_Oscillator.calculate(df)
     values['VPT'] = Volume_Price_Trend.calculate(df)
     values['FVE'] = Finite_Volume_Element.calculate(df)
     values['STOCHRSI'] = StochRSI.calculate(df)
-    values['SAR'] = SAR.calculate(df)
-    values['BASPN'] = BASPN.calculate(df)
+    # values['SAR'] = SAR.calculate(df)
+    values[['BASPN Buy', 'BASPN Sell']] = BASPN.calculate(df)
+
+    # Ranadeep
+    values[['BBANDS BB_UPPER', 'BBANDS BB_MIDDLE', 'BBANDS BB_LOWER']] = BBANDS.calculate(df)
+    values['FearOrGreed Index'] = FearOrGreed().calculate(df)
+    values[['Ichimoku TENKAN', 'Ichimoku KIJUN', 'Ichimoku senkou_span_a', 'Ichimoku SENKOU', 'Ichimoku CHIKOU']] = ICHIMOKU.calculate(df)
+    values['Standard Deviation'] = standard_deviation(df, 5)
+
+    
 
 
     values['var_90'] = VaR.calculate(df, 1).var_90.values
