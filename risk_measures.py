@@ -11,6 +11,16 @@ import requests
 from datetime import datetime
 
 
+class ForwardRollingMDD:
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window=25):
+        # reverse the column, get the rolling min
+        roll_min = df['close'][::-1].rolling(window).min()
+        rolling_drawdown = df['close'] / roll_min - 1.0
+        return rolling_drawdown
+
+
 class RollingMDD:
     """
     Maximum Drawdown
@@ -670,69 +680,9 @@ if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
     values['close'] = df['close']
-    values['Awesome Oscillator'] = AwesomeOscillator.calculate(df)
-    values['Vortex Indicator'] = VortexIndicator.calculate(df)
-    values['Mass Index'] = MassIndex.calculate(df)
-    values['Detrend Price Oscillator'] = DPOI.calculate(df)
-    values['Avg True Range'] = AverageTrueRange.calculate(df)
-    values['Ulcer Index'] = UlcerIndex.calculate(df)
-    values['Negative Volume Index'] = NegativeVolumeIndex.calculate(df)
-    values['ADX'] = ADX.calculate(df)
-    values['Aroon Indicator'] = AroonIndicator.calculate(df)
-    values['volatility'] = Volatility.calculate(df)
-    values['mdd'] = RollingMDD.calculate(df)
-    values['OBV'] = OBV.calculate(df)
-    values['rsi'] = RSI.calculate(df)
-    values['stochastic_oscillator'], _ = StochasticOscillator.calculate(df)
-    values['chaikin'] = Chaikin.calculate(df)
-    values['accumulation_distribution'] = AccumulationDistribution.calculate(df)
-    values['money_flow_index'] = MoneyFlowIndex.calculate(df)
-    values['commodity_chanel_index'] = CommodityChannelIndex.calculate(df)
-    values['ease_of_movement'] = EaseOfMovement.calculate(df, 1)
-    values['coppock_curve'] = CoppockCurve.calculate(df)
-    values['MACD'] = MACD.calculate(df)
-    values['ROC'] = ROC.calculate(df, 1)
-    values['TRIMA'] = TRIMA.calculate(df, 1)
-    values['TRIX'] = TRIX.calculate(df, 1)
-    values['VWAP'] = VWAP.calculate(df)
-    values['ER'] = ER.calculate(df)
-    values['Qstick'] = Qstick.calculate(df, 5)
-    values['EFI'] = EFI.calculate(df)
-    values['FISH'] = FISH.calculate(df)
-    values['CMO'] = CMO.calculate(df)
-    values['KAMA'] = KAMA.calculate(df)
-
-    values["PIVOT"] = PivotPoints.calculate(df)
-    values["PIVOT_FIB"] = FibonacciPivotPoints.calculate(df)
-    values["MOBO"] = MomentumBreakoutBands.calculate(df)
-    values["KC"] = KeltnerChannels.calculate(df)
-    values["TSI"] = TrueStrengthIndex.calculate(df)
-    values["HMA"] = HullMovingAvg.calculate(df)
-    values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
-    values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
-
-    values[['CHANDELIER Short', 'CHANDELIER Long']] = Chandelier.calculate(df)
-    values['WILLIAMS'] = Williams.calculate(df)
-    values[
-        ['WILLIAMS_FRACTAL BearishFractal', 'WILLIAMS_FRACTAL BullishFractal']] = Williams_Fractal_Indicator.calculate(
-        df)
-    values['VZO'] = VolumeZoneOscillator.calculate(df)
-    values['VPT'] = VolumePriceTrend.calculate(df)
-    values['FVE'] = FiniteVolumeElement.calculate(df)
-    values['STOCHRSI'] = StochRSI.calculate(df)
-    # values['SAR'] = SAR.calculate(df)
-    values[['BASPN Buy', 'BASPN Sell']] = BASPN.calculate(df)
-
-    # Ranadeep
-    values[['BBANDS BB_UPPER', 'BBANDS BB_MIDDLE', 'BBANDS BB_LOWER']] = BBANDS.calculate(df)
-    values['FearOrGreed Index'] = FearOrGreed().calculate(df)
-    values[['Ichimoku TENKAN', 'Ichimoku KIJUN', 'Ichimoku senkou_span_a', 'Ichimoku SENKOU',
-            'Ichimoku CHIKOU']] = ICHIMOKU.calculate(df)
-    values['Standard Deviation'] = StandardDeviation(df, 5)
-
-    values['var_90'] = VaR.calculate(df, 1).var_90.values
-    values['timestamp'] = df['timestamp']
-    values['timestamp'] = pd.to_datetime(values['timestamp'])
-
+    values['volume'] = df['volume']
+    values['timestamp'] = pd.to_datetime(df['timestamp'])
+    values['forward_MDD'] = ForwardRollingMDD.calculate(df)
     values = values.set_index('timestamp')
+
     plot_grid(values)
