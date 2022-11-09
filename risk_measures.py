@@ -17,7 +17,7 @@ class ForwardRollingMDD:
     def calculate(df: pd.DataFrame, window=25):
         # reverse the column, get the rolling min
         roll_min = df['close'][::-1].rolling(window).min()
-        rolling_drawdown = df['close'] / roll_min - 1.0
+        rolling_drawdown = -1 * (roll_min / df['close'] - 1.0)
         return rolling_drawdown
 
 
