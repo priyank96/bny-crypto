@@ -34,7 +34,7 @@ def plot_grid(df: pd.DataFrame, event_lines: pd.DataFrame = None):
     if event_lines is not None:
         vlines = []
         for index, row in event_lines.iterrows():
-            if pd.isnull(row['sentiment']):
+            if row.get('sentiment', 0) == 0:
                 color = 'purple'
             elif row['sentiment'] == 1:
                 color = 'green'

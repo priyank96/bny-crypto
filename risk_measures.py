@@ -152,7 +152,7 @@ class MoneyFlowIndex:
 class EaseOfMovement:
 
     @staticmethod
-    def calculate(df, n):
+    def calculate(df, n=14):
         """Calculate Ease of Movement for given data.
         
         :param df: pandas.DataFrame
