@@ -1,6 +1,9 @@
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+
+import sys
+sys.path.append("..")
 
 from util import plot_grid
 from risk_measures import *
@@ -72,7 +75,7 @@ if __name__ == '__main__':
     regressor.fit(x, values['Forward MDD'])
     pred = regressor.predict(x)
     print('Regression cosine distance: ',
-          pairwise_distances(pred.reshape(1, -1), values['Forward MDD'].values.reshape(1, -1), metric='cosine'))
+        pairwise_distances(pred.reshape(1, -1), values['Forward MDD'].values.reshape(1, -1), metric='cosine'))
     model_repr = list(zip(x.columns, regressor.coef_))
     model_repr.sort(key=lambda x: abs(x[1]), reverse=True)
     for attrib, weight in model_repr:
