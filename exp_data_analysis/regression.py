@@ -3,6 +3,7 @@ import pandas as pd
 # import matplotlib.pyplot as plt
 
 import sys
+
 sys.path.append("..")
 
 from util import plot_grid
@@ -14,7 +15,7 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge
 from sklearn.metrics import mean_squared_error
 
 if __name__ == '__main__':
-    df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
+    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 'Daily')
     btc_events = read_events('BTC', 'Social')
 
     values = pd.DataFrame()
@@ -70,16 +71,18 @@ if __name__ == '__main__':
     values = values.iloc[40:-25, :]
 
     regressor = LinearRegression(normalize=True)
+
     x = pd.DataFrame(values)
     del x['Forward MDD']
-    regressor.fit(x, values['Forward MDD'])
+    train_split = int(0.7 * len(x))
+    x_train = x[:train_split]
+    regressor.fit(x_train, values['Forward MDD'][:train_split])
     pred = regressor.predict(x)
-    print('Regression cosine distance: ',
-        pairwise_distances(pred.reshape(1, -1), values['Forward MDD'].values.reshape(1, -1), metric='cosine'))
-    model_repr = list(zip(x.columns, regressor.coef_))
-    model_repr.sort(key=lambda x: abs(x[1]), reverse=True)
-    for attrib, weight in model_repr:
-        if weight != 0.0:
-            print(attrib, weight)
+    print('Test Regression cosine distance: ',
+          pairwise_distances(pred[train_split:].reshape(1, -1),
+                             values['Forward MDD'].values[train_split:].reshape(1, -1), metric='cosine'))
+    print('Train Regression cosine distance: ',
+          pairwise_distances(pred[:train_split].reshape(1, -1),
+                             values['Forward MDD'].values[:train_split].reshape(1, -1), metric='cosine'))
     values['Linear Regression'] = pred
     plot_grid(values[['close', 'Forward MDD', 'Linear Regression']])
