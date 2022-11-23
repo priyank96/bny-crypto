@@ -21,4 +21,4 @@ if __name__ == '__main__':
     df['date'] = pd.to_datetime(df['pubdateunix'], unit='s')
     del df['pubdateunix']
     print(df.info())
-    df.to_csv('data/coindesk_articles.csv', index=False)
+    df.to_csv('data/coindesk_articles.csv', index=False, sep='\t')
