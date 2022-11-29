@@ -4,10 +4,15 @@ channels:
   - apple
   - defaults
 dependencies:
+  - python=3.7
   - pandas
+  - pandas-bokeh
   - scipy
-  - bokeh
-  - python=3.10
   - scikit-learn
+  - torchaudio
+  - pytorch-cuda=11.7
+  - torchvision
+  - pytorch
+  - transformers
   - finta
-prefix: /Users/ranadeep/miniforge3/envs/capstone
+prefix: C:\Users\admin\anaconda3\envs\capstone
