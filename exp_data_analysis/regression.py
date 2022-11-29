@@ -85,4 +85,8 @@ if __name__ == '__main__':
           pairwise_distances(pred[:train_split].reshape(1, -1),
                              values['Forward MDD'].values[:train_split].reshape(1, -1), metric='cosine'))
     values['Linear Regression'] = pred
-    plot_grid(values[['close', 'Forward MDD', 'Linear Regression']])
+    # plot_grid(values[['close', 'Forward MDD', 'Linear Regression']])
+
+    importances = regressor.coef_
+    for feature, importance in sorted(list(zip(x.columns.values, importances)), key=lambda x: abs(x[1]), reverse=True):
+        print(str(feature) + "\t" + str(importance))
