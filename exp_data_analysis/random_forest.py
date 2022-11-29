@@ -1,5 +1,5 @@
 import sys
-
+import numpy as np
 import pandas as pd
 
 sys.path.append("..")
@@ -81,3 +81,8 @@ if __name__ == '__main__':
                              values['Forward MDD'].values[:train_split].reshape(1, -1), metric='cosine'))
     values['Random Forest'] = pred
     # plot_grid(values[['close', 'Forward MDD', 'Random Forest']])
+
+    importances = regressor.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
+    for feature, importance in sorted(list(zip(x.columns.values, importances)), key=lambda x: x[1], reverse=True):
+        print(str(feature)+"\t"+str(importance))
