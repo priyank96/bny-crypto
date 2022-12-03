@@ -85,4 +85,4 @@ if __name__ == '__main__':
     importances = regressor.feature_importances_
     std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
     for feature, importance in sorted(list(zip(x.columns.values, importances)), key=lambda x: x[1], reverse=True):
-        print(str(feature)+"\t"+str(importance))
+        print(str(feature) + "\t" + str(importance))
