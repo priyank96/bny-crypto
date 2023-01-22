@@ -671,6 +671,7 @@ if __name__ == '__main__':
     values['Aroon Indicator'] = AroonIndicator.calculate(df)
     values['volatility'] = Volatility.calculate(df)
     values['mdd'] = RollingMDD.calculate(df)
+
     values['OBV'] = OBV.calculate(df)
     values['rsi'] = RSI.calculate(df)
     values['stochastic_oscillator'], _ = StochasticOscillator.calculate(df)
@@ -680,6 +681,7 @@ if __name__ == '__main__':
     values['commodity_chanel_index'] = CommodityChannelIndex.calculate(df)
     values['ease_of_movement'] = EaseOfMovement.calculate(df, 1)
     values['coppock_curve'] = CoppockCurve.calculate(df)
+    
     values['MACD'] = MACD.calculate(df)
     values['ROC'] = ROC.calculate(df, 1)
     values['TRIMA'] = TRIMA.calculate(df, 1)
