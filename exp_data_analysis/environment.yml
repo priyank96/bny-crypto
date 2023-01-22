@@ -1,0 +1,12 @@
+name: capstone
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - scikit-learn
+  - scipy
+  - pandas
+  - finta
+  - python=3.10
+  - bokeh
+prefix: /Users/ritika/opt/anaconda3/envs/capstone

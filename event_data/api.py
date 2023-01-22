@@ -2,8 +2,8 @@ import os
 import pandas as pd
 
 from price_data import read_price_data
-from risk_measures import ZeroLagExpMovingAvg, OBV, RSI, StochasticOscillator, Chaikin, AccumulationDistribution, MoneyFlowIndex,CommodityChannelIndex,EaseOfMovement,CoppockCurve
-from util import plot
+from risk_measures import ZeroLagExpMovingAvg, Volatility, FibonacciPivotPoints
+from util import plot, plot_grid
 
 
 def read_events(currency: str, kind: str):
@@ -13,22 +13,29 @@ def read_events(currency: str, kind: str):
     return df
 
 
+def read_tweet_counts(start_time, end_time):
+    df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/tweet_counts.csv')
+    df['date'] = pd.to_datetime(df['date'])
+    print(df.info())
+    df = df.set_index('date')
+    df = df.sort_index()
+    df.index = df.index.tz_localize(None)
+    mask = (df.index >= start_time) & (df.index <= end_time)
+    return df.loc[mask]
+
+
 if __name__ == '__main__':
     btc = read_price_data('BTC', '1921-01-01', '2025-07-01')
+    btc_tweets = read_tweet_counts('1921-01-01', '2025-07-01')
     btc_events = read_events('BTC', 'Social')
     to_plot = pd.DataFrame()
     to_plot['timestamp'] = btc['timestamp']
-    # to_plot['close'] = btc['close']
-    # to_plot['ZeroLagExpMvgAvg'] = ZeroLagExpMovingAvg.calculate(btc, 26)
-    # to_plot['OBV'] = OBV.calculate(btc)
-    # to_plot['rsi'] = RSI.calculate(btc)
-    # to_plot['stochastic_oscillator'], _ = StochasticOscillator.calculate(btc)
-    to_plot['chaikin'] = Chaikin.calculate(btc)
-    # to_plot['accumulation_distribution'] = AccumulationDistribution.calculate(btc)
-    # to_plot['money_flow_index'] = MoneyFlowIndex.calculate(btc)
-    # to_plot['commodity_chanel_index'] = CommodityChannelIndex.calculate(btc)
-    # to_plot['ease_of_movement'] = EaseOfMovement.calculate(btc, 14)
-    # to_plot['coppock_curve'] = CoppockCurve.calculate(btc)
+    to_plot['close'] = btc['close']
+    to_plot['volume'] = btc['volume']
+    # to_plot['Fib Pivot Point'] = FibonacciPivotPoints.calculate(btc)
+    to_plot['ZeroLagExpAvg'] = ZeroLagExpMovingAvg.calculate(btc)
     to_plot['timestamp'] = pd.to_datetime(to_plot['timestamp'])
     to_plot = to_plot.set_index('timestamp')
+    to_plot = to_plot.join(btc_tweets)
     plot(to_plot, btc_events)
+    plot_grid(to_plot, btc_events)

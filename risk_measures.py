@@ -11,6 +11,16 @@ import requests
 from datetime import datetime
 
 
+class ForwardRollingMDD:
+
+    @staticmethod
+    def calculate(df: pd.DataFrame, window=25):
+        # reverse the column, get the rolling min
+        roll_min = df['close'][::-1].rolling(window).min()
+        rolling_drawdown = -1 * (roll_min / df['close'] - 1.0)
+        return rolling_drawdown
+
+
 class RollingMDD:
     """
     Maximum Drawdown
@@ -122,7 +132,6 @@ class AccumulationDistribution:
         """Calculate Accumulation/Distribution for given data.
         
         :param df: pandas.DataFrame
-        :param n: 
         :return: pandas.DataFrame
         """
 
@@ -152,7 +161,7 @@ class MoneyFlowIndex:
 class EaseOfMovement:
 
     @staticmethod
-    def calculate(df, n):
+    def calculate(df, n=14):
         """Calculate Ease of Movement for given data.
         
         :param df: pandas.DataFrame
@@ -171,7 +180,6 @@ class CommodityChannelIndex:
         """Calculate Commodity Channel Index for given data.
         
         :param df: pandas.DataFrame
-        :param n: 
         :return: pandas.DataFrame
         """
         # PP = (df['high'] + df['low'] + df['close']) / 3
@@ -188,7 +196,6 @@ class CoppockCurve:
         """Calculate Coppock Curve for given data.
         
         :param df: pandas.DataFrame
-        :param n: 
         :return: pandas.DataFrame
         """
         return TA.COPP(df)
@@ -510,6 +517,7 @@ class InverseFisherTransformRSI:
     def calculate(df):
         return TA.IFT_RSI(df)
 
+
 class Chandelier:
     """
     Chandelier Exit (CE) is a volatility-based indicator that identifies stop loss exit points for long and short trading positions. 
@@ -521,8 +529,9 @@ class Chandelier:
     """
 
     @staticmethod
-    def calculate(df):      # short_period: int = 22, long_period: int = 22, k: int = 3,
+    def calculate(df):  # short_period: int = 22, long_period: int = 22, k: int = 3,
         return TA.CHANDELIER(df)
+
 
 class Williams:
     """
@@ -534,8 +543,9 @@ class Williams:
     """
 
     @staticmethod
-    def calculate(df):      # period: int = 14
+    def calculate(df):  # period: int = 14
         return TA.WILLIAMS(df)
+
 
 class Williams_Fractal_Indicator:
     """
@@ -547,10 +557,11 @@ class Williams_Fractal_Indicator:
     """
 
     @staticmethod
-    def calculate(df):      # period: int = 2
+    def calculate(df):  # period: int = 2
         return TA.WILLIAMS_FRACTAL(df)
 
-class Volume_Zone_Oscillator:
+
+class VolumeZoneOscillator:
     """VZO uses price, previous price and moving averages to compute its oscillating value.
     It is a leading indicator that calculates buy and sell signals based on oversold / overbought conditions.
     Oscillations between the 5% and 40% levels mark a bullish trend zone, while oscillations between -40% and 5% mark a bearish trend zone.
@@ -558,10 +569,11 @@ class Volume_Zone_Oscillator:
     Alternatively, readings below -40% indicate an oversold condition, which becomes extremely oversold below -60%."""
 
     @staticmethod
-    def calculate(df):      # period: int = 14, column: str = "close", adjust: bool = True,
+    def calculate(df):  # period: int = 14, column: str = "close", adjust: bool = True,
         return TA.VZO(df)
 
-class Volume_Price_Trend:
+
+class VolumePriceTrend:
     """
     Volume Price Trend
     The Volume Price Trend uses the difference of price and previous price with volume and feedback to arrive at its final form.
@@ -573,15 +585,17 @@ class Volume_Price_Trend:
     def calculate(df):
         return TA.VPT(df)
 
-class Finite_Volume_Element:
+
+class FiniteVolumeElement:
     """
     FVE is a technical indicator, but it has two important innovations: first, the F VE takes into account both intra and
     interday price action, and second, minimal price changes are taken into account by introducing a price threshold.
     """
 
     @staticmethod
-    def calculate(df):      # period: int = 22, factor: int = 0.3
+    def calculate(df):  # period: int = 22, factor: int = 0.3
         return TA.FVE(df)
+
 
 class StochRSI:
     """StochRSI is an oscillator that measures the level of RSI relative to its high-low range over a set time period.
@@ -589,8 +603,9 @@ class StochRSI:
     The result is an oscillator that fluctuates between 0 and 1."""
 
     @staticmethod
-    def calculate(df):      # rsi_period: int = 14, stoch_period: int = 14
+    def calculate(df):  # rsi_period: int = 14, stoch_period: int = 14
         return TA.STOCHRSI(df)
+
 
 class SAR:
     """SAR stands for “stop and reverse,” which is the actual indicator used in the system.
@@ -598,8 +613,9 @@ class SAR:
     In this regard, the indicator stops and reverses when the price trend reverses and breaks above or below the indicator."""
 
     @staticmethod
-    def calculate(df):      # af: int = 0.02, amax: int = 0.2
+    def calculate(df):  # af: int = 0.02, amax: int = 0.2
         return TA.SAR(df)
+
 
 class BASPN:
     """
@@ -607,8 +623,9 @@ class BASPN:
     """
 
     @staticmethod
-    def calculate(df):      # period: int = 40, adjust: bool = True
+    def calculate(df):  # period: int = 40, adjust: bool = True
         return TA.BASPN(df)
+
 
 class BBANDS:
     """
@@ -616,7 +633,7 @@ class BBANDS:
     """
 
     @staticmethod
-    def calculate(df):      # period: int = 40, adjust: bool = True
+    def calculate(df):  # period: int = 40, adjust: bool = True
         return TA.BBANDS(df)
 
 
@@ -632,11 +649,12 @@ class FearOrGreed:
 
         ret_list = list()
         for i in range(len(df)):
-            df_date = datetime.strptime(df.iloc[i]['timestamp'],'%Y-%m-%d')
+            df_date = datetime.strptime(df.iloc[i]['timestamp'], '%Y-%m-%d')
             for d in self.data:
-                if datetime.strptime(d['timestamp'],'%m-%d-%Y') == df_date:
+                if datetime.strptime(d['timestamp'], '%m-%d-%Y') == df_date:
                     ret_list.append(d['value'])
         return ret_list
+
 
 class ICHIMOKU:
     """
@@ -644,10 +662,11 @@ class ICHIMOKU:
     """
 
     @staticmethod
-    def calculate(df):      # period: int = 40, adjust: bool = True
+    def calculate(df):  # period: int = 40, adjust: bool = True
         return TA.ICHIMOKU(df)
 
-def standard_deviation(df, n):
+
+def StandardDeviation(df, n):
     """Calculate Standard Deviation for given data.
     
     :param df: pandas.DataFrame
@@ -656,75 +675,14 @@ def standard_deviation(df, n):
     """
     return df['close'].rolling(n, min_periods=n).std()
 
+
 if __name__ == '__main__':
     df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
     values = pd.DataFrame()
     values['close'] = df['close']
-    values['Awesome Oscillator'] = AwesomeOscillator.calculate(df)
-    values['Vortex Indicator'] = VortexIndicator.calculate(df)
-    values['Mass Index'] = MassIndex.calculate(df)
-    values['Detrend Price Oscillator'] = DPOI.calculate(df)
-    values['Avg True Range'] = AverageTrueRange.calculate(df)
-    values['Ulcer Index'] = UlcerIndex.calculate(df)
-    values['Negative Volume Index'] = NegativeVolumeIndex.calculate(df)
-    values['ADX'] = ADX.calculate(df)
-    values['Aroon Indicator'] = AroonIndicator.calculate(df)
-    values['volatility'] = Volatility.calculate(df)
-    values['mdd'] = RollingMDD.calculate(df)
-
-    values['OBV'] = OBV.calculate(df)
-    values['rsi'] = RSI.calculate(df)
-    values['stochastic_oscillator'], _ = StochasticOscillator.calculate(df)
-    values['chaikin'] = Chaikin.calculate(df)
-    values['accumulation_distribution'] = AccumulationDistribution.calculate(df)
-    values['money_flow_index'] = MoneyFlowIndex.calculate(df)
-    values['commodity_chanel_index'] = CommodityChannelIndex.calculate(df)
-    values['ease_of_movement'] = EaseOfMovement.calculate(df, 1)
-    values['coppock_curve'] = CoppockCurve.calculate(df)
-    
-    values['MACD'] = MACD.calculate(df)
-    values['ROC'] = ROC.calculate(df, 1)
-    values['TRIMA'] = TRIMA.calculate(df, 1)
-    values['TRIX'] = TRIX.calculate(df, 1)
-    values['VWAP'] = VWAP.calculate(df)
-    values['ER'] = ER.calculate(df)
-    values['Qstick'] = Qstick.calculate(df, 5)
-    values['EFI'] = EFI.calculate(df)
-    values['FISH'] = FISH.calculate(df)
-    values['CMO'] = CMO.calculate(df)
-    values['KAMA'] = KAMA.calculate(df)
-
-    values["PIVOT"] = PivotPoints.calculate(df)
-    values["PIVOT_FIB"] = FibonacciPivotPoints.calculate(df)
-    values["MOBO"] = MomentumBreakoutBands.calculate(df)
-    values["KC"] = KeltnerChannels.calculate(df)
-    values["TSI"] = TrueStrengthIndex.calculate(df)
-    values["HMA"] = HullMovingAvg.calculate(df)
-    values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
-    values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
-
-    values[['CHANDELIER Short', 'CHANDELIER Long']] = Chandelier.calculate(df)
-    values['WILLIAMS'] = Williams.calculate(df)
-    values[['WILLIAMS_FRACTAL BearishFractal', 'WILLIAMS_FRACTAL BullishFractal']] = Williams_Fractal_Indicator.calculate(df)
-    values['VZO'] = Volume_Zone_Oscillator.calculate(df)
-    values['VPT'] = Volume_Price_Trend.calculate(df)
-    values['FVE'] = Finite_Volume_Element.calculate(df)
-    values['STOCHRSI'] = StochRSI.calculate(df)
-    # values['SAR'] = SAR.calculate(df)
-    values[['BASPN Buy', 'BASPN Sell']] = BASPN.calculate(df)
-
-    # Ranadeep
-    values[['BBANDS BB_UPPER', 'BBANDS BB_MIDDLE', 'BBANDS BB_LOWER']] = BBANDS.calculate(df)
-    values['FearOrGreed Index'] = FearOrGreed().calculate(df)
-    values[['Ichimoku TENKAN', 'Ichimoku KIJUN', 'Ichimoku senkou_span_a', 'Ichimoku SENKOU', 'Ichimoku CHIKOU']] = ICHIMOKU.calculate(df)
-    values['Standard Deviation'] = standard_deviation(df, 5)
-
-    
-
-
-    values['var_90'] = VaR.calculate(df, 1).var_90.values
-    values['timestamp'] = df['timestamp']
-    values['timestamp'] = pd.to_datetime(values['timestamp'])
-
+    values['volume'] = df['volume']
+    values['timestamp'] = pd.to_datetime(df['timestamp'])
+    values['forward_MDD'] = ForwardRollingMDD.calculate(df)
     values = values.set_index('timestamp')
+
     plot_grid(values)
