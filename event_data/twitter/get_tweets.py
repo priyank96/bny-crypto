@@ -19,14 +19,14 @@ def get_tweets():
     cursor.execute('''SELECT ID FROM USER ORDER BY FOLLOWING_COUNT DESC;''')
     i = 0
     for user_id in tqdm.tqdm(cursor, total=total_user_count):
-        if i < 10136:
+        if i < 14488:
             i += 1
             continue
         response = api.get_users_tweets(
             id=user_id[0],
             exclude=['retweets,replies'],
             tweet_fields=['author_id', 'created_at', 'public_metrics'],
-            max_results=20,
+            max_results=100,
             start_time='2020-01-01T00:00:00Z'
         )
         tweets = response.data
