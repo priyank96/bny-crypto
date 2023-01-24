@@ -30,7 +30,7 @@ def fetch_new_daily_data(symbol: str):
 
 
 def update_daily_data(symbol: str):
-    filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    filename = os.path.abspath(os.path.dirname(__file__)) + "/data/Daily_" + symbol + '_' + 'USD' + '.csv'
     new_data = fetch_new_daily_data(symbol)
     if Path(filename).is_file() is True:
         old_data = read_price_csv(filename)
@@ -39,10 +39,10 @@ def update_daily_data(symbol: str):
     new_data.to_csv(filename)
 
 
-def read_price_data(symbol: str, start_time, end_time, resolution='Daily'):
-    if resolution == 'Daily':
-        filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
-    elif resolution == '30m':
+def read_price_data(symbol: str, start_time, end_time, resolution=24 * 60 * 60):
+    if resolution == 24 * 60 * 60:
+        filename = os.path.abspath(os.path.dirname(__file__)) + "/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    elif resolution == 30 * 60:
         filename = os.path.abspath(os.path.dirname(__file__)) + "/data/30m_" + symbol + '_' + 'USD' + '.csv'
     else:
         print(f"{resolution} resolution is not currently supported!")

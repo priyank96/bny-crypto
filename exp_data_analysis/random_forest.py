@@ -11,7 +11,7 @@ from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.ensemble import RandomForestRegressor
 
 if __name__ == '__main__':
-    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 'Daily')
+    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 24 * 60 * 60)
     btc_events = read_events('BTC', 'Social')
 
     values = pd.DataFrame()
