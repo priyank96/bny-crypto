@@ -2,7 +2,7 @@
 Common utils
 """
 from kafka import KafkaConsumer, KafkaProducer
-from config import KAFKA_BOOTSTRAP_SERVER
+from crisys.config import KAFKA_BOOTSTRAP_SERVER
 
 
 def get_kafka_consumer(topic, group_id=None):
