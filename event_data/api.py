@@ -1,9 +1,10 @@
 import os
 import pandas as pd
 
+from datetime import datetime
+from util import plot, plot_grid
 from price_data import read_price_data
 from risk_measures import ZeroLagExpMovingAvg, Volatility, FibonacciPivotPoints
-from util import plot, plot_grid
 
 
 def read_events(currency: str, kind: str):
@@ -29,11 +30,15 @@ def read_news_events(currency, start_time, end_time):
     if currency == 'BTC':
         df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/BTC_coindesk_articles.csv', header=0,
                          sep='\t')
-        print(df.info())
         df['timestamp'] = pd.to_datetime(df['timestamp'])
-        df = df.set_index('timestamp')
-        df = df.sort_index()
-        mask = (df.index >= start_time) & (df.index <= end_time)
+        df = df.sort_values('timestamp', ascending=True)
+
+        if isinstance(start_time, datetime):
+            start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+        if isinstance(end_time, datetime):
+            end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+
+        mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
         return df.loc[mask]
     return None
 
