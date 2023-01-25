@@ -19,12 +19,28 @@ def read_tweet_counts(start_time, end_time):
     print(df.info())
     df = df.set_index('date')
     df = df.sort_index()
+    # Check this !!! what timezone is our tweet stuff coming back in?
     df.index = df.index.tz_localize(None)
     mask = (df.index >= start_time) & (df.index <= end_time)
     return df.loc[mask]
 
 
+def read_news_events(currency, start_time, end_time):
+    if currency == 'BTC':
+        df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/BTC_coindesk_articles.csv', header=0,
+                         sep='\t')
+        print(df.info())
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df.set_index('timestamp')
+        df = df.sort_index()
+        mask = (df.index >= start_time) & (df.index <= end_time)
+        return df.loc[mask]
+    return None
+
+
 if __name__ == '__main__':
+    articles = read_news_events('BTC', '1921-01-01', '2025-07-01')
+    print(articles)
     btc = read_price_data('BTC', '1921-01-01', '2025-07-01')
     btc_tweets = read_tweet_counts('1921-01-01', '2025-07-01')
     btc_events = read_events('BTC', 'Social')
