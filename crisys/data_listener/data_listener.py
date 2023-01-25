@@ -9,7 +9,7 @@ from dateutil import parser
 from datetime import timedelta
 from price_data import read_price_data
 from event_data import read_news_events
-from crisys.util import get_kafka_producer
+from crisys.util import get_kafka_producer, jsonify
 
 
 class BatchDataListener:
@@ -33,16 +33,13 @@ class BatchDataListener:
                 mask = (df['timestamp'] >= prev_time.strftime('%Y-%m-%dT%H:%M:%S%z')) & (
                         df['timestamp'] <= current_time.strftime('%Y-%m-%dT%H:%M:%S%z'))
                 df = df.loc[mask]
-                parsed_vals = self._jsonify(df)
-                print(json.dumps(parsed_vals, indent=4))
-                time.sleep(5)
+                self._emit(df)
 
     @staticmethod
-    def _jsonify(df):
-        df = df.set_index('timestamp')
-        vals = df.to_json(orient='index')
-        return json.loads(vals)
-
+    def _emit(df):
+        parsed_vals = jsonify(df)
+        print(json.dumps(parsed_vals, indent=4))
+        time.sleep(5)
 
 
 class DataListenerFactory:
