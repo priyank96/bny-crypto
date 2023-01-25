@@ -3,6 +3,7 @@ import urllib.request
 from pathlib import Path
 
 import pandas as pd
+from datetime import datetime
 
 API_KEY = '8X2HU0WTHV1BX717'
 DAILY_DATA_URL = 'https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=<symbol>&market=<market>&apikey=<api_key>&datatype=csv'  # nopep8
@@ -30,7 +31,7 @@ def fetch_new_daily_data(symbol: str):
 
 
 def update_daily_data(symbol: str):
-    filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    filename = os.path.abspath(os.path.dirname(__file__)) + "/data/Daily_" + symbol + '_' + 'USD' + '.csv'
     new_data = fetch_new_daily_data(symbol)
     if Path(filename).is_file() is True:
         old_data = read_price_csv(filename)
@@ -39,14 +40,20 @@ def update_daily_data(symbol: str):
     new_data.to_csv(filename)
 
 
-def read_price_data(symbol: str, start_time, end_time, resolution='Daily'):
-    if resolution == 'Daily':
-        filename = os.path.abspath(os.path.dirname(__file__))+"/data/Daily_" + symbol + '_' + 'USD' + '.csv'
-    elif resolution == '30m':
+def read_price_data(symbol: str, start_time, end_time, resolution=24 * 60 * 60):
+    if resolution == 24 * 60 * 60:
+        filename = os.path.abspath(os.path.dirname(__file__)) + "/data/Daily_" + symbol + '_' + 'USD' + '.csv'
+    elif resolution == 30 * 60:
         filename = os.path.abspath(os.path.dirname(__file__)) + "/data/30m_" + symbol + '_' + 'USD' + '.csv'
     else:
         print(f"{resolution} resolution is not currently supported!")
     df = pd.read_csv(filename)
+
+    if isinstance(start_time, datetime):
+        start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+    if isinstance(end_time, datetime):
+        end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+
     mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
     return df.loc[mask]
 

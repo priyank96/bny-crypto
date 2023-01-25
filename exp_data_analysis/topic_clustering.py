@@ -34,7 +34,7 @@ def get_tfidf_top_features(documents, n_top=10):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('../event_data/data/coindesk_articles.csv', header=0, sep='\t')
+    df = pd.read_csv('../event_data/data/BTC_coindesk_articles.csv', header=0, sep='\t')
     print(df.info())
 
     tokenizer = AutoTokenizer.from_pretrained("ElKulako/cryptobert")

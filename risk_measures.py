@@ -702,7 +702,7 @@ def StandardDeviation(df, n):
 
 
 if __name__ == '__main__':
-    df = read_price_data('ETH', '2021-01-01', '2022-09-20', 'Daily')
+    df = read_price_data('ETH', '2021-01-01', '2022-09-20', 24 * 60 * 60)
     values = pd.DataFrame()
     values['close'] = df['close']
     values['volume'] = df['volume']
