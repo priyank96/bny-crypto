@@ -15,7 +15,7 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge
 from sklearn.metrics import mean_squared_error
 
 if __name__ == '__main__':
-    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 'Daily')
+    df = read_price_data('BTC', '2021-01-01', '2022-09-20', '30m')
     btc_events = read_events('BTC', 'Social')
 
     values = pd.DataFrame()
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     values['timestamp'] = pd.to_datetime(values['timestamp'])
 
     values = values.set_index('timestamp')
-    values = values.iloc[40:-25, :]
+    values = values.iloc[40:-12, :]
 
     regressor = LinearRegression(normalize=True)
 
@@ -84,6 +84,11 @@ if __name__ == '__main__':
     print('Train Regression cosine distance: ',
           pairwise_distances(pred[:train_split].reshape(1, -1),
                              values['Forward MDD'].values[:train_split].reshape(1, -1), metric='cosine'))
+
+
+    print('Mean Squared Errror',mean_squared_error(values['Forward MDD'].values[:train_split].reshape(1, -1), pred[:train_split].reshape(1, -1)))
+
+
     values['Linear Regression'] = pred
     # plot_grid(values[['close', 'Forward MDD', 'Linear Regression']])
 

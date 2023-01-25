@@ -9,9 +9,11 @@ from event_data import read_events
 from price_data import read_price_data
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+
 
 if __name__ == '__main__':
-    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 'Daily')
+    df = read_price_data('BTC', '2021-01-01', '2022-09-20', '30m')
     btc_events = read_events('BTC', 'Social')
 
     values = pd.DataFrame()
@@ -64,7 +66,7 @@ if __name__ == '__main__':
     values['timestamp'] = pd.to_datetime(values['timestamp'])
 
     values = values.set_index('timestamp')
-    values = values.iloc[40:-25, :]
+    values = values.iloc[40:-12, :]
 
     regressor = RandomForestRegressor(n_estimators=10)
     x = pd.DataFrame(values)
@@ -79,6 +81,10 @@ if __name__ == '__main__':
     print('Train Random forest cosine distance: ',
           pairwise_distances(pred[:train_split].reshape(1, -1),
                              values['Forward MDD'].values[:train_split].reshape(1, -1), metric='cosine'))
+
+    
+    print('Mean Squared Errror',mean_squared_error(values['Forward MDD'].values[:train_split].reshape(1, -1), pred[:train_split].reshape(1, -1)))
+
     values['Random Forest'] = pred
     # plot_grid(values[['close', 'Forward MDD', 'Random Forest']])
 

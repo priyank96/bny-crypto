@@ -14,11 +14,36 @@ from datetime import datetime
 class ForwardRollingMDD:
 
     @staticmethod
-    def calculate(df: pd.DataFrame, window=25):
-        # reverse the column, get the rolling min
-        roll_min = df['close'][::-1].rolling(window).min()
-        rolling_drawdown = -1 * (roll_min / df['close'] - 1.0)
-        return rolling_drawdown
+    # def calculate(df: pd.DataFrame, window=12):
+    #     # reverse the column, get the rolling min
+    #     roll_min = df['close'][::-1].rolling(window).min()
+    #     rolling_drawdown = -1 * (roll_min / df['close'] - 1.0)
+    #     return rolling_drawdown
+    
+    def calculate(df, window=12):
+        """
+        fmdd is defined as the forward maximum drawdown
+        (considering open prices)
+        arg:
+            df = dataframe with the 30min data
+        output:
+            dataframe with 6 hour fmdd added as a column
+        """
+        temp_list = []
+
+        df = df[["close"]]
+        for i in range(len(df)-window):
+            forward_df = df.iloc[i:i+window]
+            max_idx = forward_df.idxmax("index")
+            max = forward_df.loc[max_idx].close.iloc[0]
+            forward_df = forward_df.loc[max_idx[0]:]
+            min = forward_df.min("index")[0]
+            mdd = (max-min)/max
+            temp_list.append(mdd)
+        for i in range(window):
+            temp_list.append(0)
+
+        return temp_list    
 
 
 class RollingMDD:

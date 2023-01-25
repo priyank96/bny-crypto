@@ -17,14 +17,13 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge
 from sklearn.metrics import mean_squared_error
 
 if __name__ == '__main__':
-    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 'Daily')
+    df = read_price_data('BTC', '2021-01-01', '2022-09-20', '30m')
     btc_events = read_events('BTC', 'Social')
 
     values = pd.DataFrame()
     values['close'] = df['close']
     values['volume'] = df['volume']
     values['Awesome Oscillator'] = AwesomeOscillator.calculate(df)
-    values['Forward MDD'] = ForwardRollingMDD.calculate(df)
     values['Vortex Indicator'] = VortexIndicator.calculate(df)
     values['Mass Index'] = MassIndex.calculate(df)
     values['Detrend Price Oscillator'] = DPOI.calculate(df)
@@ -70,7 +69,10 @@ if __name__ == '__main__':
     values['timestamp'] = pd.to_datetime(values['timestamp'])
 
     values = values.set_index('timestamp')
-    values = values.iloc[40:-25, :]
+
+    values = values.iloc[40:, :]
+    values['Forward MDD'] = ForwardRollingMDD.calculate(df)
+    values = values.iloc[:-12, :]
 
     x = pd.DataFrame(values)
     x.to_csv("values.csv")
