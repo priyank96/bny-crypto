@@ -17,11 +17,11 @@ def get_tweets():
     cursor = conn.cursor()
     total_user_count = cursor.execute('''SELECT COUNT(*) FROM USER;''').fetchone()[0]
     cursor.execute('''SELECT ID FROM USER ORDER BY FOLLOWING_COUNT DESC;''')
-    i = 0
+    # i = 0
     for user_id in tqdm.tqdm(cursor, total=total_user_count):
-        if i < 14488:
-            i += 1
-            continue
+        # if i < 33094:
+        #     i += 1
+        #     continue
         response = api.get_users_tweets(
             id=user_id[0],
             exclude=['retweets,replies'],
