@@ -54,11 +54,20 @@ class RollingMDD:
     """
 
     @staticmethod
-    def calculate(df: pd.DataFrame, window=25):
+    def calculate(df: pd.DataFrame, window=12):
         #  from https://quant.stackexchange.com/a/45407
         roll_max = df['close'].rolling(window).max()
         rolling_drawdown = df['close'] / roll_max - 1.0
         return -1 * rolling_drawdown
+    
+
+    # def calculate(df: pd.DataFrame, window=12):
+    # #  from https://quant.stackexchange.com/a/45407
+    #     roll_max = df['close'].rolling(window).max()
+    #     rolling_drawdown = df['close'] / roll_max - 1.0
+    #     Max_Daily_Drawdown = rolling_drawdown.rolling(window, min_periods=1).min()
+
+    #     return Max_Daily_Drawdown
 
 
 class VaR:

@@ -1,5 +1,5 @@
 # from pycaret.regression import *
-
+# from sklearn.metrics.pairwise import cosine_similarity 
 import pandas as pd
 # import seaborn as sns
 # import matplotlib.pyplot as plt
@@ -16,8 +16,14 @@ from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.linear_model import LinearRegression, Lasso, Ridge
 from sklearn.metrics import mean_squared_error
 
+
+# def cosine_similarity_custom(y, y_pred):
+#     cs = cosine_similarity(np.array(y).reshape(1, -1), np.array(y_pred).reshape(1, -1))
+#     return cs
+
+
 if __name__ == '__main__':
-    df = read_price_data('BTC', '2021-01-01', '2022-09-20', '30m')
+    df = read_price_data('BTC', '2021-01-01', '2022-09-20', 30*60)
     btc_events = read_events('BTC', 'Social')
 
     values = pd.DataFrame()
@@ -63,21 +69,28 @@ if __name__ == '__main__':
     values["HMA"] = HullMovingAvg.calculate(df)
     values["ZLEMA"] = ZeroLagExpMovingAvg.calculate(df)
     values["IFT_RSI"] = InverseFisherTransformRSI.calculate(df)
-
     values['var_90'] = VaR.calculate(df, 1).var_90.values
+    values['Forward MDD'] = ForwardRollingMDD.calculate(df)
+
     values['timestamp'] = df['timestamp']
     values['timestamp'] = pd.to_datetime(values['timestamp'])
 
     values = values.set_index('timestamp')
 
-    values = values.iloc[40:, :]
-    values['Forward MDD'] = ForwardRollingMDD.calculate(df)
-    values = values.iloc[:-12, :]
+    values = values.iloc[40:-12, :]
 
     x = pd.DataFrame(values)
-    x.to_csv("values.csv")
+    x.to_csv("new_values.csv")
     # del x['Forward MDD']
-    train_split = int(0.7 * len(x))
-    x_train = x[:train_split]
+    # train_split = int(0.7 * len(x))
+    # x_train = x[:train_split]
+    # x_test = x[train_split:]
 
-    # s = setup(x, target = 'Forward MDD')
+    # s = setup(data = x_train, target = 'Forward MDD',test_data = x_test, fold_strategy = 'timeseries')
+    # add_metric('distance', 'Cosine Distance', cosine_similarity_custom)
+    # best = compare_models(sort='Cosine Distance')
+    # print("Evaluate Model: ", evaluate_model(best))
+
+    # predictions = predict_model(best, data=x_test)
+    # print(predictions.head())
+    # print("Cosine Similarity of Test Data: ", cosine_similarity_custom(predictions['Forward MDD'], predictions.Label))
