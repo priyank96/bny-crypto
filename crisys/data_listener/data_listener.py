@@ -2,14 +2,12 @@
 Data Listener Classes
 Listen to the outside world and convert them to events to be written into Kafka
 """
-import json
-import time
-
-from dateutil import parser
 from datetime import timedelta
-from price_data import read_price_data
+
+from crisys.util import jsonify
+from dateutil import parser
 from event_data import read_news_events
-from crisys.util import get_kafka_producer, jsonify
+from price_data import read_price_data
 
 
 class BatchDataListener:
@@ -20,26 +18,19 @@ class BatchDataListener:
         self.start_time = start_time
         self.end_time = end_time
         self.interval = interval
-        # self.kafka_producer = get_kafka_producer()
 
     def start(self):
-        dfs = [self.price_data, self.news_data]
+        dfs = [(self.price_data, 'price'), (self.news_data, 'news')]
         prev_time = self.start_time
         current_time = self.start_time + self.interval
         while prev_time <= self.end_time:
             prev_time = current_time
             current_time += self.interval
-            for df in dfs:
+            for df, data_type in dfs:
                 mask = (df['timestamp'] >= prev_time.strftime('%Y-%m-%dT%H:%M:%S%z')) & (
                         df['timestamp'] <= current_time.strftime('%Y-%m-%dT%H:%M:%S%z'))
                 df = df.loc[mask]
-                self._emit(df)
-
-    @staticmethod
-    def _emit(df):
-        parsed_vals = jsonify(df)
-        print(json.dumps(parsed_vals, indent=4))
-        time.sleep(5)
+                yield data_type, jsonify(df)
 
 
 class DataListenerFactory:
@@ -62,7 +53,7 @@ class DataListenerFactory:
         symbol = 'BTC' if args.get('symbol') is None else args.get('symbol')
 
         price_data = read_price_data(symbol, start_time, end_time, interval.total_seconds())
-        news_data = read_news_events(symbol, start_time, end_time)
+        news_data = read_news_events(symbol+'_BERTopic', start_time, end_time)
         social_data = None
 
         return BatchDataListener(

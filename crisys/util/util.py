@@ -2,25 +2,12 @@
 Common utils
 """
 import json
-from kafka import KafkaConsumer, KafkaProducer
-from crisys.config import KAFKA_BOOTSTRAP_SERVER
-
-
-def get_kafka_consumer(topic, group_id=None):
-    return KafkaConsumer(topic, group_id=group_id)
-
-
-__producer = None
-
-
-def get_kafka_producer():
-    global __producer
-    if __producer is None:
-        __producer = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVER)
-    return __producer
+import pandas as pd
 
 
 def jsonify(df):
-    df = df.set_index('timestamp')
-    vals = df.to_json(orient='index', date_format='iso')
-    return json.loads(vals)
+    return json.dumps(df.to_json(orient='columns', date_format='iso'))
+
+
+def json_to_df(message):
+    return pd.read_json(json.loads(message), orient='columns')

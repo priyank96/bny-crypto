@@ -32,15 +32,18 @@ def read_news_events(currency, start_time, end_time):
                          sep='\t')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df = df.sort_values('timestamp', ascending=True)
+    elif currency == 'BTC_BERTopic':
+        df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/article_class_probabilites.csv', header=0,
+                         sep=',')
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df.sort_values('timestamp', ascending=True)
+    if isinstance(start_time, datetime):
+        start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+    if isinstance(end_time, datetime):
+        end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
 
-        if isinstance(start_time, datetime):
-            start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
-        if isinstance(end_time, datetime):
-            end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
-
-        mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
-        return df.loc[mask]
-    return None
+    mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
+    return df.loc[mask]
 
 
 if __name__ == '__main__':
