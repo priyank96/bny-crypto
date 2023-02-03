@@ -21,6 +21,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data_listener = DataListenerFactory.get_listener({}, listener_type='batch')
     price_event_processor = EventProcessorFactory.get_event_processor({}, processor_type='price')
+    news_event_processor = EventProcessorFactory.get_event_processor({}, processor_type='news')
 
     for data_type, raw_data in data_listener.start():
 
@@ -29,6 +30,7 @@ if __name__ == '__main__':
             processed_data = price_event_processor.process(raw_data)
             print(pd.read_json(json.loads(processed_data), orient='columns'))
         elif data_type == 'news':
-            ...
-        time.sleep(5)
+            processed_data = news_event_processor.process(raw_data)
+            print(pd.read_json(json.loads(processed_data), orient='columns'))
+        # time.sleep(5)
 

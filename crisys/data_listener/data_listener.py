@@ -53,7 +53,7 @@ class DataListenerFactory:
         symbol = 'BTC' if args.get('symbol') is None else args.get('symbol')
 
         price_data = read_price_data(symbol, start_time, end_time, interval.total_seconds())
-        news_data = read_news_events(symbol, start_time, end_time)
+        news_data = read_news_events(symbol+'_BERTopic', start_time, end_time)
         social_data = None
 
         return BatchDataListener(
