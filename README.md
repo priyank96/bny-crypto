@@ -1,6 +1,15 @@
 # bny-crypto
 MSAII Capstone
 
+## Running Streamlit Dashboard
+```bash
+conda create -n capstone python==3.10.4
+conda activate capstone
+pip install -r requirements.txt
+streamlit run dashboard.py
+```
+
+
 ## Creating the conda environment
 ```commandline
 conda env create -f environment.yml
