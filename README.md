@@ -15,6 +15,14 @@ conda env export --from-history > environment.yml
 ```
 The `--from-history` flag is used to only export the packages that were installed explicitly by the user,
 this helps to make the environment portable across platforms.
+## Notes
+To generate data for v0 experiments:
+1. Aggregate binance data (binance_data_aggregator.py) - this is in UTC
+2. Run generate_csv.py to add all the TAs
+3. Run SPY_data.py to add the S&P500 data
+
+Use the sp500values.csv file!
+
 
 ## Quick Commands
 ### Kafka

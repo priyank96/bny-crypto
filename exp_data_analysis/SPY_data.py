@@ -27,7 +27,7 @@ import requests
 # print(df.head())
 # df.to_csv('sp500.csv')
 
-df = pd.read_csv('values.csv', header=0)
+df = pd.read_csv('new_values.csv', header=0)
 spdf = pd.read_csv('sp500.csv', header=0)
 
 del spdf["high"]
@@ -39,9 +39,15 @@ spdf.rename(mapper={
     "volume": "SPY_Volume",
     "timestamp": "SPY_timestamp"
 }, axis='columns', inplace=True)
-# print(df.info())
-print(spdf.info())
+
+spdf['SPY_timestamp'] = pd.to_datetime(spdf['SPY_timestamp'])
+# convert time stamp to UTC, it comes from alpha vantage as EST
+spdf['SPY_timestamp'] = spdf['SPY_timestamp'].dt.tz_localize('EST')
+
+spdf['SPY_timestamp'] = spdf['SPY_timestamp'].dt.tz_convert('UTC')
+df['timestamp'] = pd.to_datetime(df['timestamp']).dt.tz_localize('UTC')
 df = pd.merge(df, spdf, left_on='timestamp', right_on='SPY_timestamp')
 del df["SPY_timestamp"]
+del df["Unnamed: 0"]
 print(df.info())
 df.to_csv('sp500values.csv', index=False)
