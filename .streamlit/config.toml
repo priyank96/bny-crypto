@@ -1,0 +1,20 @@
+[server]
+# Default: 8501
+port = 8000
+
+# Automatically rerun script when the file is modified on disk.
+# Default: false
+runOnSave = true
+
+[theme]
+base="light"
+primaryColor="#ffba00"
+secondaryBackgroundColor="#EEEEEE"
+textColor="#000000"
+font="monospace"
+
+[client]
+# Whether to enable st.cache.
+# Default: true
+caching = false
+
