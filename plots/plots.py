@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
+import random
 
-def prediction_horizon_bar_chart(postitive_chance = 0.2, negative_chance = 0.5):
+def prediction_horizon_bar_plot(postitive_chance = 0.2, negative_chance = 0.5):
 
     neutral_chance = 1 - postitive_chance - negative_chance
     title = ''
@@ -45,5 +46,16 @@ def prediction_horizon_bar_chart(postitive_chance = 0.2, negative_chance = 0.5):
     ))
 
     fig.update_layout(barmode='stack', height=200, title="Price Movement")
+
+    return fig
+
+def trend_line_plot(title='Trend Line Plot', n=10):
+    n = 10
+    x = list(range(1,n+1))
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=[random.randint(1, 10) for i in range(n)], fill='tozeroy', name="Historic", marker=dict(color="red"))) # fill down to xaxis
+    fig.add_trace(go.Scatter(x=x, y=[random.randint(1, 10) for i in range(n)], fill='tozeroy', name="Latest", marker=dict(color="blue"))) # fill to trace0 y
+    fig.update_layout(title=title)
 
     return fig

@@ -48,20 +48,42 @@ with st.sidebar:
 
 
 # Main Body
-st.title(f"Dashboard for {asset}")
+st.markdown(f"""
+<style>
+    .highlight{{
+        color: #e3a72f;
+    }}
+</style>
+<h1>Dashboard for <span class='highlight'>{asset}</span> in <span class='highlight'>{time_interval}</span> intervals and <span class='highlight'>{lookback_period}</span> lookback period</h1>
+""", unsafe_allow_html=True)
+# st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
 st.markdown('----')
 
 with st.container():
-    st.plotly_chart(plots.prediction_horizon_bar_chart(0.2, 0.5))
+    st.plotly_chart(plots.prediction_horizon_bar_plot(0.2, 0.5), use_container_width=True)
 
 st.markdown('----')
 col1, col2 = st.columns(2)
 
 with col1:
+
+    with st.expander(f"Mentions", expanded=True):
+        st.plotly_chart(plots.trend_line_plot(title='Mentions', n=10), use_container_width=True)
+
+
+    with st.expander(f"Sentiment Trend", expanded=True):
+        st.plotly_chart(plots.trend_line_plot(title='Sentiment', n=10), use_container_width=True)
+
     if asset == "BTC": # Show BTC Fear and Greed Index
-        st.image(f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png", use_column_width=True)
+        with st.expander(f"Fear & Greed Index", expanded=True):
+            st.image(f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png", use_column_width=True)
+
+    
 
 with col2:
     with st.expander(f"News Summary", expanded=True):
         st.write(f"For previous {lookback_period} of {asset}")
+    
+    with st.expander(f"Top Mentions", expanded=True):
+        st.write(f"TODO: Put tweets + news")
 
