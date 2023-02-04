@@ -68,11 +68,11 @@ col1, col2 = st.columns(2)
 with col1:
 
     with st.expander(f"Mentions", expanded=True):
-        st.plotly_chart(plots.trend_line_plot(title='Mentions', n=10), use_container_width=True)
+        st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
 
     with st.expander(f"Sentiment Trend", expanded=True):
-        st.plotly_chart(plots.trend_line_plot(title='Sentiment', n=10), use_container_width=True)
+        st.plotly_chart(plots.sentiment_line_plot(title='Sentiment', n=10), use_container_width=True)
 
     if asset == "BTC": # Show BTC Fear and Greed Index
         with st.expander(f"Fear & Greed Index", expanded=True):
