@@ -86,7 +86,7 @@ class DashboardNewsData:
         df = df[(df['class_labels'].apply(lambda x: len(DashboardNewsData.useful_topic_ids.intersection(x)) > 0))]
         df['class_labels'] = df['class_labels'].apply(lambda x: DashboardNewsData.topic_id_label_mapping[x[0]])
 
-        df['sentiment'] = df['sentiment_logits'].apply(
+        df['sentiment_logits'] = df['sentiment_logits'].apply(
             lambda x: DashboardNewsData.sentiment_index_label_mapping[x.index(max(x))])
         return df
 
