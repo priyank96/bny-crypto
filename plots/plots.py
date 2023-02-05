@@ -45,7 +45,7 @@ def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5):
         showlegend=False
     ))
 
-    fig.update_layout(barmode='stack', height=200, title="Price Movement")
+    fig.update_layout(barmode='stack', height=180, title="Price Movement")
 
     return fig
 
@@ -59,7 +59,7 @@ def mentions_line_plot(title='Trend Line Plot', n=10):
                              marker=dict(color="gray")))  # fill down to xaxis
     fig.add_trace(go.Scatter(x=x, y=[random.randint(1, 10) for i in range(n)], fill='tozeroy', name="Latest",
                              marker=dict(color="#e3a72f")))  # fill to trace0 y
-    fig.update_layout(title=title)
+    # fig.update_layout(title=title)
 
     return fig
 
@@ -73,12 +73,15 @@ def sentiment_line_plot(title='Trend Line Plot', n=10):
                              marker=dict(color="gray")))  # fill down to xaxis
     fig.add_trace(go.Scatter(x=x, y=[random.uniform(-1, 1) for i in range(n)], fill='tozeroy', name="Latest",
                              marker=dict(color="#e3a72f")))  # fill to trace0 y
-    fig.update_layout(title=title)
+    # fig.update_layout(title=title)
 
     return fig
 
 
 def news_sentiment_line_plot(df, title='Trend Line Plot'):
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df['sentiment'], fill='tozeroy', marker=dict(color="#e3a72f")))
+    fig.add_trace(
+        go.Line(x=df.index, y=df['sentiment'], fill='tozeroy', name="Sentiment")
+    )
+    fig['data'][0]['showlegend'] = True
     return fig

@@ -66,13 +66,13 @@ with st.container():
     st.plotly_chart(plots.prediction_horizon_bar_plot(0.2, 0.5), use_container_width=True)
 
 st.markdown('----')
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    with st.expander(f"Mentions", expanded=True):
+    with st.expander(f"Mentions", expanded=False):
         st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-    with st.expander(f"Sentiment Trend", expanded=True):
+    with st.expander(f"Sentiment Trend", expanded=False):
         st.plotly_chart(plots.sentiment_line_plot(title='Sentiment', n=10), use_container_width=True)
 
     with st.expander(f"News Sentiment Trend", expanded=True):
@@ -81,14 +81,22 @@ with col1:
                         use_container_width=True)
 
     if asset == "BTC":  # Show BTC Fear and Greed Index
-        with st.expander(f"Fear & Greed Index", expanded=True):
+        with st.expander(f"Fear & Greed Index", expanded=False):
             st.image(
                 f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
                 use_column_width=True)
 
 with col2:
     with st.expander(f"News Summary", expanded=True):
-        st.dataframe(DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time))
-
-    with st.expander(f"Top Mentions", expanded=True):
+        article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
+        for i in range(len(article_df)):
+            st.markdown(f"""
+                <h5>{article_df.iloc[i]['title']}</h5>
+                <strong>{article_df.iloc[i]['subheadlines']}</strong><br/>
+                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
+                <hr/>
+                
+            """, unsafe_allow_html=True)
+with col3:
+    with st.expander(f"Top Mentions", expanded=False):
         st.write(f"TODO: Put tweets + news")

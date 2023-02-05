@@ -89,7 +89,7 @@ class DashboardNewsData:
             del df['timestamp']
             return df
         # filter useless articles
-        df = df[(df['class_labels'].apply(lambda x: len(DashboardNewsData.useful_topic_ids.intersection(x)) > 0))]
+        df = df[(df['class_labels'].apply(lambda x: x[0] in DashboardNewsData.useful_topic_ids))]
         df['class_labels'] = df['class_labels'].apply(lambda x: DashboardNewsData.topic_id_label_mapping[x[0]])
 
         df['sentiment_logits'] = df['sentiment_logits'].apply(
@@ -107,7 +107,7 @@ class DashboardNewsData:
             df['sentiment'] = []
             return df
         # filter useless articles
-        df = df[(df['class_labels'].apply(lambda x: len(DashboardNewsData.useful_topic_ids.intersection(x)) > 0))]
+        df = df[(df['class_labels'].apply(lambda x: x[0] in DashboardNewsData.useful_topic_ids))]
         df['sentiment_logits'] = df['sentiment_logits'].apply(
             lambda x: x[2] - x[0])  # difference between positive and negative sentiment logit
         df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -123,7 +123,8 @@ class DashboardNewsData:
             for j in range(len(df)):
                 if final_df.index[i] < df.iloc[j]['timestamp'] < final_df.index[i] + timedelta:
                     final_df.iloc[i]['sentiment'] += df.iloc[j]['sentiment_logits']
-
+        final_df.replace(0, pd.NA, inplace=True)
+        final_df['sentiment'] = final_df['sentiment'].interpolate(method='slinear')
         return final_df
 
     @staticmethod
