@@ -37,7 +37,7 @@ st.markdown(f""" <style>
     }} </style> """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.image("images/crisys_logo.png", use_column_width=True)
+    st.image("images/crisys_logo.png", width=80)
     st.title("Dashboard")
     asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["15Min", "30Min", "1h", "6h", "1d"])
@@ -92,11 +92,13 @@ with col1:
 with col2:
     with st.expander(f"News Summary", expanded=True):
         article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
+        if len(article_df) == 0:
+            st.write(" ")
         for i in range(len(article_df)):
             st.markdown(f"""
                 <h5>{article_df.iloc[i]['title']}</h5>
                 <strong>{article_df.iloc[i]['subheadlines']}</strong><br/>
-                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
+                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
                 <hr/>
                 
             """, unsafe_allow_html=True)
