@@ -53,11 +53,14 @@ with st.sidebar:
 # Main Body
 st.markdown(f"""
 <style>
+    div.block-container{{
+        padding-top: 0;
+    }}
     .highlight{{
         color: #e3a72f;
     }}
 </style>
-<h1>Dashboard for <span class='highlight'>{asset}</span> in <span class='highlight'>{time_interval}</span> intervals and <span class='highlight'>{lookback_period}</span> lookback period</h1>
+<h3>Dashboard for <span class='highlight'>{asset}</span> in <span class='highlight'>{time_interval}</span> intervals and <span class='highlight'>{lookback_period}</span> lookback period</h3>
 """, unsafe_allow_html=True)
 # st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
 st.markdown('----')
@@ -93,7 +96,7 @@ with col2:
             st.markdown(f"""
                 <h5>{article_df.iloc[i]['title']}</h5>
                 <strong>{article_df.iloc[i]['subheadlines']}</strong><br/>
-                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
+                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
                 <hr/>
                 
             """, unsafe_allow_html=True)

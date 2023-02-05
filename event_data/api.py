@@ -123,8 +123,6 @@ class DashboardNewsData:
             for j in range(len(df)):
                 if final_df.index[i] < df.iloc[j]['timestamp'] < final_df.index[i] + timedelta:
                     final_df.iloc[i]['sentiment'] += df.iloc[j]['sentiment_logits']
-        final_df.replace(0, pd.NA, inplace=True)
-        final_df['sentiment'] = final_df['sentiment'].interpolate(method='slinear')
         return final_df
 
     @staticmethod
