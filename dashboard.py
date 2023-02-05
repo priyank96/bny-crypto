@@ -6,12 +6,15 @@ import plotly.express as px  # interactive charts
 import datetime
 
 import streamlit as st  # 🎈 data web app development
-import streamlit_helpers, plots.plots as plots 
+import streamlit_helpers, plots.plots as plots
 import random
 
+from event_data import DashboardNewsData
+
 # Page config. Other configs are loaded from .streamlit/config.toml
-st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard", page_icon="images/crisys_logo.png", layout="wide", initial_sidebar_state="auto", menu_items=None)
-st.markdown(streamlit_helpers.hide_streamlit_style, unsafe_allow_html=True) 
+st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
+                   page_icon="images/crisys_logo.png", layout="wide", initial_sidebar_state="auto", menu_items=None)
+st.markdown(streamlit_helpers.hide_streamlit_style, unsafe_allow_html=True)
 st.markdown("""
     <style>
     div.stButton > button:first-child {
@@ -33,19 +36,19 @@ st.markdown(f""" <style>
         padding-bottom: {padding}rem;
     }} </style> """, unsafe_allow_html=True)
 
-
 with st.sidebar:
     st.image("images/crisys_logo.png", use_column_width=True)
     st.title("Dashboard")
     asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
-    time_interval = st.selectbox("Time Intervals:", ["15m", "1h", "6h", "1d"])
+    time_interval = st.selectbox("Time Intervals:", ["15Min", "30Min", "1h", "6h", "1d"])
     lookback_period = st.selectbox("Lookback Period:", ["6h", "24h"])
-    date = st.date_input(
-    "Start Date:",
-    datetime.date(2019, 1, 16))
+    date = st.date_input("Start Date:", datetime.date(2019, 1, 16))
+    time = st.time_input("Start Time:")
+    end_time = datetime.datetime.combine(date, time)
+    start_time = end_time - pd.to_timedelta(lookback_period)
+
     if st.button("Refresh"):
         st.experimental_rerun()
-
 
 # Main Body
 st.markdown(f"""
@@ -66,24 +69,26 @@ st.markdown('----')
 col1, col2 = st.columns(2)
 
 with col1:
-
     with st.expander(f"Mentions", expanded=True):
         st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
-
 
     with st.expander(f"Sentiment Trend", expanded=True):
         st.plotly_chart(plots.sentiment_line_plot(title='Sentiment', n=10), use_container_width=True)
 
-    if asset == "BTC": # Show BTC Fear and Greed Index
-        with st.expander(f"Fear & Greed Index", expanded=True):
-            st.image(f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png", use_column_width=True)
+    with st.expander(f"News Sentiment Trend", expanded=True):
+        df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
+        st.plotly_chart(plots.news_sentiment_line_plot(df, title='Sentiment'),
+                        use_container_width=True)
 
-    
+    if asset == "BTC":  # Show BTC Fear and Greed Index
+        with st.expander(f"Fear & Greed Index", expanded=True):
+            st.image(
+                f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
+                use_column_width=True)
 
 with col2:
     with st.expander(f"News Summary", expanded=True):
-        st.write(f"For previous {lookback_period} of {asset}")
-    
+        st.dataframe(DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time))
+
     with st.expander(f"Top Mentions", expanded=True):
         st.write(f"TODO: Put tweets + news")
-

@@ -1,1 +1,1 @@
-from .api import read_events, read_news_events
+from .api import read_events, read_news_events, DashboardNewsData

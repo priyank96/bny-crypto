@@ -82,17 +82,30 @@ class DashboardNewsData:
     @staticmethod
     def dashboard_news_articles_to_show(currency, start_time, end_time):
         df = DashboardNewsData._load_news_df(currency, start_time, end_time)
+        if len(df) == 0:
+            df.index = df['timestamp']
+            del df['sponsored']
+            del df['labels']
+            del df['timestamp']
+            return df
         # filter useless articles
         df = df[(df['class_labels'].apply(lambda x: len(DashboardNewsData.useful_topic_ids.intersection(x)) > 0))]
         df['class_labels'] = df['class_labels'].apply(lambda x: DashboardNewsData.topic_id_label_mapping[x[0]])
 
         df['sentiment_logits'] = df['sentiment_logits'].apply(
             lambda x: DashboardNewsData.sentiment_index_label_mapping[x.index(max(x))])
+        df.index = df['timestamp']
+        del df['sponsored']
+        del df['labels']
+        del df['timestamp']
         return df
 
     @staticmethod
     def dashboard_news_aggregated_sentiment(currency, start_time, end_time, freq='30min'):
         df = DashboardNewsData._load_news_df(currency, start_time, end_time)
+        if len(df) == 0:
+            df['sentiment'] = []
+            return df
         # filter useless articles
         df = df[(df['class_labels'].apply(lambda x: len(DashboardNewsData.useful_topic_ids.intersection(x)) > 0))]
         df['sentiment_logits'] = df['sentiment_logits'].apply(
@@ -102,7 +115,7 @@ class DashboardNewsData:
 
         # put everything in 30 min buckets
         time_range_index = pd.date_range(start=start_time, end=end_time, freq=freq, tz='UTC')
-        final_df = pd.DataFrame(index=time_range_index, columns=["sentiment"])
+        final_df = pd.DataFrame(index=time_range_index, columns=['sentiment'])
         final_df.fillna(0.0, inplace=True)
 
         timedelta = pd.Timedelta(freq)
