@@ -40,7 +40,7 @@ with st.sidebar:
     st.image("images/crisys_logo.png", width=80)
     st.title("Dashboard")
     asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
-    time_interval = st.selectbox("Time Intervals:", ["15Min", "30Min", "1h", "6h", "1d"])
+    time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
     lookback_period = st.selectbox("Lookback Period:", ["6h", "24h"])
     date = st.date_input("Start Date:", datetime.date(2019, 1, 16))
     time = st.time_input("Start Time:")
