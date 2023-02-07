@@ -10,7 +10,7 @@ import streamlit as st  # 🎈 data web app development
 import streamlit_helpers, plots.plots as plots
 import random
 
-from event_data import DashboardNewsData
+from event_data import DashboardNewsData # In event_data/api.py
 
 # Page config. Other configs are loaded from .streamlit/config.toml
 st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
@@ -43,8 +43,10 @@ with st.sidebar:
     asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
     lookback_period = st.selectbox("Lookback Period:", ["6h", "24h"])
-    date = st.date_input("Start Date:", datetime.date(2019, 1, 16))
-    end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
+    starting_date = datetime.datetime(2019, 2, 21, 5, 0, 0, 0) # Dummy value
+    date = st.date_input("Start Date:", starting_date)
+    # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
+    end_time = st.time_input("Start Time:", streamlit_helpers.round_time(starting_date))
     # end_time = st.time_input("Start Time:")
     end_time = datetime.datetime.combine(date, end_time)
     if end_time > datetime.datetime.now():
@@ -64,13 +66,38 @@ st.markdown(f"""
         color: #e3a72f;
     }}
 </style>
-<h3>Dashboard for <span class='highlight'>{asset}</span> in <span class='highlight'>{time_interval}</span> intervals and <span class='highlight'>{lookback_period}</span> lookback period</h3>
+<h3>Dashboard for <span class='highlight'>{asset}</span> 
+in <span class='highlight'>{time_interval}</span> 
+intervals and <span class='highlight'>{lookback_period}</span> lookback period
+at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h3>
 """, unsafe_allow_html=True)
 # st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
 st.markdown('----')
 
 with st.container():
-    st.plotly_chart(plots.prediction_horizon_bar_plot(0.2, 0.5), use_container_width=True)
+    # Dummy values
+    st.markdown(f"""
+<style>
+    div.block-container{{
+        padding-top: 0;
+    }}
+    .highlight{{
+        color: #e3a72f;
+    }}
+</style>
+<h4>Risk Score</h4>
+""", unsafe_allow_html=True)
+    increase_risk = 20
+    delta_increase_risk = 7
+    decrease_risk = 50
+    delta_decrease_risk = -2
+    col1, col2, col3 = st.columns(3)
+    col1.metric("CRYSys Score", f"{decrease_risk-increase_risk}%", f"{delta_decrease_risk-delta_increase_risk}%")
+    col2.metric("Risk to Increase", f"{increase_risk}%", f"{delta_increase_risk}%")
+    col3.metric("Risk to Decrease", f"{decrease_risk}%", f"{delta_decrease_risk}%")
+
+    st.plotly_chart(plots.prediction_horizon_bar_plot(increase_risk/100, decrease_risk/100), use_container_width=True)
+
 
 st.markdown('----')
 col1, col2, col3 = st.columns(3)
@@ -104,9 +131,7 @@ with col2:
                 <h5>{article_df.iloc[i]['title']}</h5>
                 <strong>{article_df.iloc[i]['subheadlines']}</strong><br/>
                 Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
-                <hr/>
-                
-            """, unsafe_allow_html=True)
+            """ + (i < (len(article_df)-1))*'<hr/>', unsafe_allow_html=True)
 with col3:
     with st.expander(f"Top Mentions", expanded=False):
         st.write(f"TODO: Put tweets + news")

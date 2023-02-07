@@ -2,9 +2,8 @@ import plotly.graph_objects as go
 import random
 
 
-def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5):
+def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5, title='Risk Prediction'):
     neutral_chance = 1 - postitive_chance - negative_chance
-    title = ''
     layout = go.Layout(
         # paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)'
@@ -17,7 +16,7 @@ def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5):
         name='Positive',
         orientation='h',
         marker=dict(
-            color='rgba(0, 255, 0, 1)',
+            color='rgba(0, 255, 0, 0.7)',
             # line=dict(color='rgba(55, 255, 55, 1.0)', width=3)
         ),
         showlegend=False
@@ -28,7 +27,7 @@ def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5):
         name='Neutral',
         orientation='h',
         marker=dict(
-            color='rgba(170, 170, 170, 1)',
+            color='rgba(170, 170, 170, 0.7)',
             # line=dict(color='rgba(58, 71, 80, 1.0)', width=3)
         ),
         showlegend=False
@@ -39,13 +38,13 @@ def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5):
         name='Negative',
         orientation='h',
         marker=dict(
-            color='rgba(255, 0, 0, 1)',
+            color='rgba(255, 0, 0, 0.7)',
             # line=dict(color='rgba(58, 71, 80, 1.0)', width=3)
         ),
         showlegend=False
     ))
 
-    fig.update_layout(barmode='stack', height=180, title="Price Movement")
+    fig.update_layout(barmode='stack', height=200)#, title=title)
 
     return fig
 
