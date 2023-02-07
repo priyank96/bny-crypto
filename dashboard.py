@@ -133,5 +133,5 @@ with col2:
                 Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
             """ + (i < (len(article_df)-1))*'<hr/>', unsafe_allow_html=True)
 with col3:
-    with st.expander(f"Top Mentions", expanded=False):
+    with st.expander(f"Top Mentions", expanded=True):
         st.write(f"TODO: Put tweets + news")
