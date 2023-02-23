@@ -3,3 +3,5 @@ jupyter==1.0.0
 plotly==5.13.0
 pandas==1.5.2
 click==8
+lppls==0.6.6
+feedparser==6.0.10
