@@ -15,6 +15,8 @@ from event_data import DashboardNewsData # In event_data/api.py
 # Page config. Other configs are loaded from .streamlit/config.toml
 st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
                    page_icon="images/crisys_logo.png", layout="wide", initial_sidebar_state="auto", menu_items=None)
+
+# st.balloons()
 st.markdown(streamlit_helpers.hide_streamlit_style, unsafe_allow_html=True)
 st.markdown("""
     <style>
@@ -92,7 +94,7 @@ with st.container():
     decrease_risk = 50
     delta_decrease_risk = -2
     col1, col2, col3 = st.columns(3)
-    col1.metric("CRYSys Score", f"{decrease_risk-increase_risk}%", f"{delta_decrease_risk-delta_increase_risk}%")
+    col1.metric("CRISys Score", f"{decrease_risk-increase_risk}%", f"{delta_decrease_risk-delta_increase_risk}%")
     col2.metric("Risk to Increase", f"{increase_risk}%", f"{delta_increase_risk}%")
     col3.metric("Risk to Decrease", f"{decrease_risk}%", f"{delta_decrease_risk}%")
 
