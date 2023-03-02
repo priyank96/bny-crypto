@@ -1,14 +1,14 @@
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
+import requests
 import ta
 from finta import TA
 from scipy.stats import norm
 
 from price_data import read_price_data
 from util import plot_grid
-
-import requests
-from datetime import datetime
 
 
 class ForwardRollingMDD:
@@ -19,7 +19,7 @@ class ForwardRollingMDD:
     #     roll_min = df['close'][::-1].rolling(window).min()
     #     rolling_drawdown = -1 * (roll_min / df['close'] - 1.0)
     #     return rolling_drawdown
-    
+
     def calculate(df, window=12):
         """
         fmdd is defined as the forward maximum drawdown
@@ -32,18 +32,18 @@ class ForwardRollingMDD:
         temp_list = []
 
         df = df[["close"]]
-        for i in range(len(df)-window):
-            forward_df = df.iloc[i:i+window]
+        for i in range(len(df) - window):
+            forward_df = df.iloc[i:i + window]
             max_idx = forward_df.idxmax("index")
             max = forward_df.loc[max_idx].close.iloc[0]
             forward_df = forward_df.loc[max_idx[0]:]
             min = forward_df.min("index")[0]
-            mdd = (max-min)/max
+            mdd = (max - min) / max
             temp_list.append(mdd)
         for i in range(window):
             temp_list.append(0)
 
-        return temp_list    
+        return temp_list
 
 
 class RollingMDD:
@@ -58,16 +58,9 @@ class RollingMDD:
         #  from https://quant.stackexchange.com/a/45407
         roll_max = df['close'].rolling(window).max()
         rolling_drawdown = df['close'] / roll_max - 1.0
-        return -1 * rolling_drawdown
-    
+        max_drawdown = rolling_drawdown.rolling(window, min_periods=1).min()
 
-    # def calculate(df: pd.DataFrame, window=12):
-    # #  from https://quant.stackexchange.com/a/45407
-    #     roll_max = df['close'].rolling(window).max()
-    #     rolling_drawdown = df['close'] / roll_max - 1.0
-    #     Max_Daily_Drawdown = rolling_drawdown.rolling(window, min_periods=1).min()
-
-    #     return Max_Daily_Drawdown
+        return max_drawdown
 
 
 class VaR:
@@ -115,9 +108,10 @@ class VaR:
 class Volatility:
 
     @staticmethod
-    def calculate(df: pd.DataFrame, window=10):
+    def calculate(df: pd.DataFrame, window=12):
         #  what is volatility? https://www.wallstreetmojo.com/volatility-formula/
         # Implementation: https://stackoverflow.com/a/52941348/5699807 ; https://stackoverflow.com/a/43284457/5699807
+        # why 12? https://finance.zacks.com/use-intraday-volatility-trading-11583.html
         return df['close'].rolling(window=window).std(ddof=0)
 
 
@@ -125,7 +119,10 @@ class RSI:
 
     @staticmethod
     def calculate(df: pd.DataFrame):
-        return ta.momentum.rsi(df.close)
+        # why 12?
+        # https://choiceindia.com/blog/best-rsi-setting-for-intraday
+        # https://admiralmarkets.com/education/articles/forex-indicators/relative-strength-index-how-to-trade-with-an-rsi-indicator
+        return ta.momentum.rsi(df.close, window=12)
 
 
 class StochasticOscillator:
@@ -136,7 +133,10 @@ class StochasticOscillator:
 
 
 class OBV:
-
+    """
+        On Balance Volume
+        https://www.investopedia.com/terms/o/onbalancevolume.asp
+    """
     @staticmethod
     def calculate(df: pd.DataFrame):
         copy = df.copy()
@@ -153,10 +153,9 @@ class Chaikin:
         :return: pandas.DataFrame
         """
         ad = (2 * df['close'] - df['high'] - df['low']) / (df['high'] - df['low']) * df['volume']
-        Chaikin = pd.Series(ad.ewm(span=3, min_periods=3).mean() - ad.ewm(span=10, min_periods=10).mean(),
+        chaikin = pd.Series(ad.ewm(span=3, min_periods=3).mean() - ad.ewm(span=10, min_periods=10).mean(),
                             name='Chaikin')
-        # df = df.join(Chaikin)
-        return Chaikin
+        return chaikin
 
 
 class AccumulationDistribution:

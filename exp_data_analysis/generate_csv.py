@@ -42,7 +42,7 @@ if __name__ == '__main__':
     values['mdd'] = RollingMDD.calculate(df)
     values['OBV'] = OBV.calculate(df)
     values['rsi'] = RSI.calculate(df)
-    values['stochastic_oscillator'], _ = StochasticOscillator.calculate(df)
+    values['stochastic_oscillator_lower'], values['stochastic_oscillator_upper'] = StochasticOscillator.calculate(df)
     values['chaikin'] = Chaikin.calculate(df)
     values['accumulation_distribution'] = AccumulationDistribution.calculate(df)
     values['money_flow_index'] = MoneyFlowIndex.calculate(df)

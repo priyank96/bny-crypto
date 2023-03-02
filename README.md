@@ -27,7 +27,7 @@ this helps to make the environment portable across platforms.
 ## Notes
 To generate data for v0 experiments:
 1. Aggregate binance data (binance_data_aggregator.py) - this is in UTC
-2. Run generate_csv.py to add all the TAs
+2. Run generate_csv.py to add all the TAs (Optional)
 3. Run SPY_data.py to add the S&P500 data
 
 Use the sp500values.csv file!
