@@ -47,3 +47,22 @@ bin/kafka-server-start.sh config/server.properties
 ```commandline
 bin/kafka-topics.sh --create --topic quickstart-events --bootstrap-server localhost:9092
 ```
+
+
+### Using Pycaret
+#### Adding/Using Data Sources
+Add the raw/processed data files in the drive and load the data in the files in the notebook (preferably in a dataframe format). All Dataframe needs to be the merged into a single datafram prior to loading the 
+
+#### Setup
+Setup will setup the training pipeline, some key parameters:
+- If testset is set (we haven't set), it would be used as a holdout test
+- fold_strategy defines how to make the split, (set to timeseries makes sure the time isn't morphed)
+- We have 10 folds by default
+
+#### Adding custom Metrics
+RDR can be used an example to see how to add a custom metric
+
+#### Comparing Model
+Compares all the models the pycaret library on the given data. Models can be added or excluded using parameters. Cross Validation parameters will overwrite the setup parameters.
+
+The results can be analyzed using the interactive dashboard pycaret provides
