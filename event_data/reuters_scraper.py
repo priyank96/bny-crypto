@@ -64,11 +64,10 @@ def get_news():
             try:
                 rows_for_date_slice = get_rows(get_data(end_index).json())
             except:
-                print("Exception! Going to Sleep")
+                print("Exception! Resetting start time")
                 # reset the search starting from the last fetched articles,
                 # subtract 92 days because outside it gets added back outside
                 start_date = pd.to_datetime(all_rows[-1][1]) - timedelta(days=92) # publish time of last fetched row
-                time.sleep(60)
                 break
 
             all_rows.extend(rows_for_date_slice)
