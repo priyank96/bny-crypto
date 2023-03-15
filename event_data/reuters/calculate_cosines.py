@@ -1,13 +1,14 @@
 import pickle
 
 import numpy as np
+import pandas as pd
 import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 
-if __name__ == ' __main__':
+if __name__ == '__main__':
     df_train = None
     with open('df_train.pkl', 'rb') as f:
-        df_train = pickle.load(f)
+        df_train = pd.read_pickle(f)
 
     embeds = df_train['embeds'].to_numpy()
     embeds = np.vstack(embeds)
