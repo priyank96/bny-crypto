@@ -12,6 +12,10 @@ if __name__ == '__main__':
     print(embeds.shape)
 
     similarities = cosine_similarity(embeds)
+    similarities = np.argsort(similarities)[::-1][0:101]
+    print(similarities[0])
     print(similarities.shape)
+    del embeds
     with open('df_train_similarities.pkl', 'wb') as f:
         pickle.dump(similarities, f)
+    print("Done!")
