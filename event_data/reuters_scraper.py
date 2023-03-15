@@ -45,7 +45,7 @@ def get_news():
                                  "keyword": "*",
                                  "offset": offset,
                                  "orderby": "display_date:asc",
-                                 # "sections": "/world",
+                                 "sections": "/technology",
                                  "size": 100,
                                  "start_date": datetime.strftime(start_date, '%Y-%m-%dT%H:%M:%S.%fZ'),
                                  "website": "reuters"}),
@@ -64,10 +64,11 @@ def get_news():
             try:
                 rows_for_date_slice = get_rows(get_data(end_index).json())
             except:
-                print("Exception! Resetting start time")
+                print("Exception! Going to Sleep")
                 # reset the search starting from the last fetched articles,
                 # subtract 92 days because outside it gets added back outside
                 start_date = pd.to_datetime(all_rows[-1][1]) - timedelta(days=92) # publish time of last fetched row
+                time.sleep(60)
                 break
 
             all_rows.extend(rows_for_date_slice)
@@ -84,4 +85,4 @@ if __name__ == '__main__':
     df['timestamp'] = pd.to_datetime(df['published_time'], utc=True)
     del df['published_time']
     print(df.info())
-    df.to_csv('data/BTC_reuters_articles.csv', index=False, sep='\t')
+    df.to_csv('data/reuters_technology_articles.csv', index=False, sep='\t')
