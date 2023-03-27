@@ -9,3 +9,5 @@ ta==0.10.2
 finta==1.3
 bokeh==3.0.3
 plotly==5.13.0
+statsmodels==0.13.2
+python-sec==0.1.6
