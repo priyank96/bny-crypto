@@ -55,12 +55,19 @@ class RollingMDD:
 
     @staticmethod
     def calculate(df: pd.DataFrame, window=12):
-        #  from https://quant.stackexchange.com/a/45407
-        roll_max = df['close'].rolling(window).max()
-        rolling_drawdown = df['close'] / roll_max - 1.0
-        max_drawdown = rolling_drawdown.rolling(window, min_periods=1).min()
+        temp_list = [0 for i in range(window)]
 
-        return max_drawdown
+        df = df[["close"]]
+        for i in range(len(df) - window):
+            forward_df = df.iloc[i:i + window]
+            max_idx = forward_df.idxmax("index")
+            max = forward_df.loc[max_idx].close.iloc[0]
+            forward_df = forward_df.loc[max_idx[0]:]
+            min = forward_df.min("index")[0]
+            mdd = (max - min) / max
+            temp_list.append(mdd)
+
+        return temp_list
 
 
 class VaR:
