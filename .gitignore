@@ -137,3 +137,4 @@ dmypy.json
 *.zip
 
 __pycache__/
+.DS_Store
