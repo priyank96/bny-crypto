@@ -9,6 +9,6 @@ hide_streamlit_style = """
             </style>
             """
 
-def round_time(dt, mins_delta=15):
+def round_time(dt, mins_delta=30):
     delta = timedelta(minutes=mins_delta)
     return datetime.datetime.min + math.floor((dt - datetime.datetime.min) / delta) * delta

@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import random
 
 
@@ -77,10 +78,42 @@ def sentiment_line_plot(title='Trend Line Plot', n=10):
     return fig
 
 
-def news_sentiment_line_plot(df, title='Trend Line Plot'):
+def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_color=None, fill=None, title='Trend Line Plot'):
     fig = go.Figure()
-    fig.add_trace(
-        go.Line(x=df.index, y=df['sentiment'], fill='tozeroy', name="Sentiment")
-    )
+    if column_x is None:
+        x = df.index
+    else:
+        x = df[column_x]
+    fig.add_trace(go.Line(x=x, y=df[column_y], fill=fill, name=line_name, marker=dict(color=line_color)))
+    if title is not None:
+        fig.update_layout(title_text=title)
+    fig['data'][0]['showlegend'] = True
+    return fig
+
+def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, fill=None, title='Trend Line Plot'):
+    # fig = go.Figure()
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
+    if column_x is None:
+        x = df.index
+    else:
+        x = df[column_x]
+    fig.append_trace(go.Line(x=x, y=df[column_y1], fill=fill, name=line_name1, marker=dict(color=line_color1)), row=1, col=1)
+    fig.append_trace(go.Line(x=x, y=df[column_y2], fill=fill, name=line_name2, marker=dict(color=line_color2)), row=2, col=1)
+    if title is not None:
+        fig.update_layout(title_text=title)
+    fig['data'][0]['showlegend'] = True
+    return fig
+
+def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, fill=None, title='Trend Line Plot'):
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
+    if column_x is None:
+        x = df.index
+    else:
+        x = df[column_x]
+    fig.add_trace(go.Line(x=x, y=df[column_y1], fill=fill, name=line_name1, marker=dict(color=line_color1)), secondary_y=False)
+    fig.add_trace(go.Line(x=x, y=df[column_y2], fill=fill, name=line_name2, marker=dict(color=line_color2)), secondary_y=True)
+    if title is not None:
+        fig.update_layout(title_text=title)
     fig['data'][0]['showlegend'] = True
     return fig

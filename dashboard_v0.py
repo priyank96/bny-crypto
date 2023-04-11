@@ -7,8 +7,7 @@ import datetime
 from datetime import timedelta
 
 import streamlit as st  # 🎈 data web app development
-import streamlit_helpers
-from plots import plots
+import streamlit_helpers, plots.plots as plots
 import random
 
 from event_data import DashboardNewsData # In event_data/api.py
@@ -46,10 +45,10 @@ with st.sidebar:
     asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
     lookback_period = st.selectbox("Lookback Period:", ["6h", "24h"])
-    starting_date = datetime.datetime(2022, 2, 21, 5, 0, 0, 0) # Dummy value
+    starting_date = datetime.datetime(2019, 2, 21, 5, 0, 0, 0) # Dummy value
     date = st.date_input("Start Date:", starting_date)
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
-    end_time = st.time_input("Start Time:", streamlit_helpers.round_time(starting_date, mins_delta=30))
+    end_time = st.time_input("Start Time:", streamlit_helpers.round_time(starting_date))
     # end_time = st.time_input("Start Time:")
     end_time = datetime.datetime.combine(date, end_time)
     if end_time > datetime.datetime.now():
@@ -60,7 +59,6 @@ with st.sidebar:
         st.experimental_rerun()
 
 # Main Body
-highlight_color = '#e3a72f'
 st.markdown(f"""
 <style>
     div.block-container{{
@@ -76,44 +74,66 @@ intervals and <span class='highlight'>{lookback_period}</span> lookback period
 at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h3>
 """, unsafe_allow_html=True)
 # st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
-# st.markdown('----')
+st.markdown('----')
 
-price_data_df = pd.read_csv("new_values.csv")
+with st.container():
+    # Dummy values
+    st.markdown(f"""
+<style>
+    div.block-container{{
+        padding-top: 0;
+    }}
+    .highlight{{
+        color: #e3a72f;
+    }}
+</style>
+<h4>Risk Score</h4>
+""", unsafe_allow_html=True)
+    increase_risk = 20
+    delta_increase_risk = 7
+    decrease_risk = 50
+    delta_decrease_risk = -2
+    col1, col2, col3 = st.columns(3)
+    col1.metric("CRISys Score", f"{decrease_risk-increase_risk}%", f"{delta_decrease_risk-delta_increase_risk}%")
+    col2.metric("Risk to Increase", f"{increase_risk}%", f"{delta_increase_risk}%")
+    col3.metric("Risk to Decrease", f"{decrease_risk}%", f"{delta_decrease_risk}%")
 
-tab_overview, tab_social, tab_news, tab4 = st.tabs(["Overview 🚨", "Twitter 🐦", "News 📰", "More? 🤔"])
+    st.plotly_chart(plots.prediction_horizon_bar_plot(increase_risk/100, decrease_risk/100), use_container_width=True)
 
-with tab_overview:
-    # FMDD Numbers
-    price_data_df_24h = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-25:]
-    fmdd_values = [round(x,3) for x in price_data_df_24h['Forward MDD'].values]
-    fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/(fmdd_values[-1]+10**-9),1)
-    st.metric(label="Forward MDD - Risk of Price Fall", value=fmdd_values[-1], delta=f"{fmdd_delta}%", delta_color="inverse")
 
-    st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
-                                                   line_name="Forward MDD", line_color='red', fill='tozeroy', title='Forward MDD (24h)'),
-                        use_container_width=True)
+st.markdown('----')
+col1, col2, col3 = st.columns(3)
 
-    st.markdown('----')
-
-    # Price Numbers
-    price_values = [round(x,3) for x in price_data_df_24h['close'].values]
-    price_delta = round(100*(price_values[-1]-price_values[-2])/(price_values[-1]+10**-9),1)
+with col1:
     
+    # with st.expander(f"Sentiment Trend", expanded=False):
+    #     st.plotly_chart(plots.sentiment_line_plot(title='Sentiment', n=10), use_container_width=True)
 
-    volume_values = [round(x,0) for x in price_data_df_24h['volume'].values]
-    volume_delta = round(100*(volume_values[-1]-volume_values[-2])/(volume_values[-1]+10**-9),1)
-
-    col1, col2 = st.columns(2)
-
-    col1.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}%")
-    col2.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}%")
-
-    st.plotly_chart(plots.line_plot_double_stacked(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', 
-                                                   line_name1="Price", line_name2='Volume', line_color1=highlight_color, title='Price and Volume (24h) Stacked'),
+    with st.expander(f"News Sentiment Trend", expanded=True):
+        df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
+        st.plotly_chart(plots.news_sentiment_line_plot(df, title='Sentiment'),
                         use_container_width=True)
 
-    st.plotly_chart(plots.line_plot_double_shared(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', 
-                                                   line_name1="Price", line_name2='Volume', line_color1=highlight_color, title='Price and Volume (24h) Shared'),
-                        use_container_width=True)
+    with st.expander(f"Mentions", expanded=True):
+        st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
+    if asset == "BTC":  # Show BTC Fear and Greed Index
+        with st.expander(f"Fear & Greed Index", expanded=True):
+            st.image(
+                f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
+                use_column_width=True)
 
+with col2:
+    with st.expander(f"News Summary", expanded=True):
+        article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
+        if len(article_df) == 0:
+            st.write(" ")
+        for i in range(len(article_df)):
+            st.markdown(f"""
+                <h5>{article_df.iloc[i]['title']}</h5>
+                <strong>{article_df.iloc[i]['subheadlines']}</strong><br/>
+                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
+            """ + (i < (len(article_df)-1))*'<hr/>', unsafe_allow_html=True)
+with col3:
+    with st.expander(f"Top Mentions", expanded=True):
+        st.write(f"TODO: Put tweets + news")

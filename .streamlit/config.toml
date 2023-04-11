@@ -8,7 +8,7 @@ runOnSave = true
 
 [theme]
 base="light"
-primaryColor="#ffba00"
+primaryColor="#e3a72f"
 secondaryBackgroundColor="#EEEEEE"
 textColor="#000000"
 font="monospace"
