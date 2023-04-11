@@ -87,29 +87,21 @@ with tab_overview:
     price_data_df_24h = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-25:]
     fmdd_values = [round(x,3) for x in price_data_df_24h['Forward MDD'].values]
     fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/(fmdd_values[-1]+10**-9),1)
-    st.metric(label="Forward MDD - Risk of Price Fall", value=fmdd_values[-1], delta=f"{fmdd_delta}%", delta_color="inverse")
-
-    st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
-                                                   line_name="Forward MDD", line_color='red', fill='tozeroy', title='Forward MDD (24h)'),
-                        use_container_width=True)
-
-    st.markdown('----')
-
     # Price Numbers
     price_values = [round(x,3) for x in price_data_df_24h['close'].values]
     price_delta = round(100*(price_values[-1]-price_values[-2])/(price_values[-1]+10**-9),1)
-    
-
+    # Volume Numbers
     volume_values = [round(x,0) for x in price_data_df_24h['volume'].values]
     volume_delta = round(100*(volume_values[-1]-volume_values[-2])/(volume_values[-1]+10**-9),1)
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
-    col1.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}%")
-    col2.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}%")
-
-    st.plotly_chart(plots.line_plot_double_stacked(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', 
-                                                   line_name1="Price", line_name2='Volume', line_color1=highlight_color, title='Price and Volume (24h) Stacked'),
+    col1.metric(label="Forward MDD - Risk of Price Fall", value=fmdd_values[-1], delta=f"{fmdd_delta}%", delta_color="inverse")
+    col2.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}%")
+    col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}%")
+    
+    st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
+                                                   line_name="Forward MDD", line_color='red', fill='tozeroy', title='Forward MDD (24h)'),
                         use_container_width=True)
 
     st.plotly_chart(plots.line_plot_double_shared(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', 
