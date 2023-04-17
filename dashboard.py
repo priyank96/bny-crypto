@@ -45,11 +45,11 @@ with st.sidebar:
     st.title("Dashboard")
     asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
-    lookback_period = st.selectbox("Lookback Period:", ["6h", "24h"])
+    lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"])
     starting_date = datetime.datetime(2022, 2, 21, 5, 0, 0, 0) # Dummy value
-    date = st.date_input("Start Date:", starting_date)
+    date = st.date_input("End Date:", starting_date)
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
-    end_time = st.time_input("Start Time:", streamlit_helpers.round_time(starting_date, mins_delta=30))
+    end_time = st.time_input("End Time:", streamlit_helpers.round_time(starting_date, mins_delta=30))
     # end_time = st.time_input("Start Time:")
     end_time = datetime.datetime.combine(date, end_time)
     if end_time > datetime.datetime.now():
@@ -83,8 +83,9 @@ price_data_df = pd.read_csv("new_values.csv")
 tab_overview, tab_social, tab_news, tab4 = st.tabs(["Overview 🚨", "Twitter 🐦", "News 📰", "More? 🤔"])
 
 with tab_overview:
+    num_lookback_points = int(lookback_period.split('h')[0]) * 2 + 1 # 24h * 2 + 1
     # FMDD Numbers
-    price_data_df_24h = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-25:]
+    price_data_df_24h = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
     fmdd_values = [round(x,3) for x in price_data_df_24h['Forward MDD'].values]
     fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/(fmdd_values[-1]+10**-9),1)
     # Price Numbers
@@ -101,11 +102,11 @@ with tab_overview:
     col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}%")
     
     st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
-                                                   line_name="Forward MDD", line_color='red', fill='tozeroy', title='Forward MDD (24h)'),
+                                                   line_name="Forward MDD", line_color='red', fill='tozeroy', title=f'Forward MDD ({lookback_period})'),
                         use_container_width=True)
 
     st.plotly_chart(plots.line_plot_double_shared(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', 
-                                                   line_name1="Price", line_name2='Volume', line_color1=highlight_color, title='Price and Volume (24h) Shared'),
+                                                   line_name1="Price", line_name2='Volume', line_color1=highlight_color, title=f'Price and Volume ({lookback_period}) Shared'),
                         use_container_width=True)
 
 
