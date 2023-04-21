@@ -7,7 +7,8 @@ import datetime
 from datetime import timedelta
 
 import streamlit as st  # 🎈 data web app development
-import streamlit_helpers, plots.plots as plots
+import streamlit_helpers
+from plots import plots
 import random
 
 from event_data import DashboardNewsData # In event_data/api.py
@@ -111,7 +112,7 @@ with col1:
 
     with st.expander(f"News Sentiment Trend", expanded=True):
         df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
-        st.plotly_chart(plots.news_sentiment_line_plot(df, title='Sentiment'),
+        st.plotly_chart(plots.line_plot_single(df, column_y='sentiment', title='Sentiment'),
                         use_container_width=True)
 
     with st.expander(f"Mentions", expanded=True):

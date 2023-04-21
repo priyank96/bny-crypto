@@ -64,7 +64,7 @@ def mentions_line_plot(title='Trend Line Plot', n=10):
     return fig
 
 
-def sentiment_line_plot(title='Trend Line Plot', n=10):
+def sentiment_line_plot(title=None, n=10):
     n = 10
     x = list(range(1, n + 1))
 
@@ -73,7 +73,8 @@ def sentiment_line_plot(title='Trend Line Plot', n=10):
                              marker=dict(color="gray")))  # fill down to xaxis
     fig.add_trace(go.Scatter(x=x, y=[random.uniform(-1, 1) for i in range(n)], fill='tozeroy', name="Latest",
                              marker=dict(color="#e3a72f")))  # fill to trace0 y
-    # fig.update_layout(title=title)
+    if title is not None:
+        fig.update_layout(title_text=title)
 
     return fig
 

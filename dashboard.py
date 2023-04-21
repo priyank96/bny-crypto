@@ -52,7 +52,7 @@ with st.sidebar:
     st.title("Dashboard")
     asset = st.selectbox("Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
-    lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"])
+    lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=1)
     starting_date = datetime.datetime(2022, 2, 24, 5, 0, 0, 0) # Dummy value
     date = st.date_input("End Date:", starting_date)
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
@@ -87,7 +87,7 @@ at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h4>
 
 price_data_df = pd.read_csv("new_values.csv")
 
-tab_overview, tab_social, tab_news, tab4 = st.tabs(["Overview 🚨", "Twitter 🐦", "News 📰", "More? 🤔"])
+tab_overview, tab_social, tab_news, tab_ti, tab4 = st.tabs(["Overview 🚨", "Twitter 🐦", "News 📰", "Technical Indictors 📈", "More? 🤔"])
 
 with tab_overview:
     num_lookback_points = int(lookback_period.split('h')[0]) * 2 + 1 # 24h * 2 + 1
@@ -126,4 +126,72 @@ with tab_overview:
     #     end_time = end_time - pd.to_timedelta(-30, unit='m')
     #     st.experimental_rerun()
 
+with tab_social:
+    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+        st.markdown("""
+        * Twitter Sentiment Trend
+        * Trending Topics
+        * Mentions
+        * Top Tweets
+        * Wordcloud
+        """)
+    with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
+        st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
+with tab_news:
+
+    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+        st.markdown("""
+        * Show Press Releases
+        * News Named Entity Word Cloud
+        """)
+
+    with st.expander(f"News Sentiment Trend", expanded=True):
+        # st.write(f"{asset}, {start_time}, {end_time}")
+        df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
+        if len(df) == 0:
+            st.write("No Articles In this Time Period")
+        else:
+            st.plotly_chart(plots.line_plot_single(df, column_y='sentiment', line_name='News Sentiment Trend'),
+                            use_container_width=True)
+
+    with st.expander(f"Latest News Summary", expanded=True):
+        article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
+        # article_df.set_index('timestamp', inplace=True)
+        article_df.sort_index(inplace=True, ascending=False)
+        
+        if len(article_df) == 0:
+            st.write("No Articles In this Time Period")
+        for i in range(len(article_df)):
+            st.markdown(f"""
+                <h6>{article_df.iloc[i]['title']}</h6>
+                <p>{article_df.index[i].strftime("%Y-%m-%d %H:%M")} - {article_df.iloc[i]['subheadlines']}</p>
+                Sentiment: {article_df.iloc[i]['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {article_df.iloc[i]['class_labels']}
+            """ + (i < len(article_df) - 1)*'<hr/>', unsafe_allow_html=True)
+
+with tab_ti:
+    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+        st.markdown("""
+        * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
+        """)
+
+
+with tab4:
+
+    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+        st.markdown("""
+        * Trends from other data processing
+        * API for other sources
+        * Open to ideas
+        """)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if asset == "BTC":  # Show BTC Fear and Greed Index
+            with st.expander(f"Fear & Greed Index", expanded=True):
+                st.image(
+                    f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
+                    use_column_width=True)
+                
+    

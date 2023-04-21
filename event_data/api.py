@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+import datetime
 
 import pandas as pd
 from price_data import read_price_data
@@ -37,9 +37,9 @@ def read_news_events(currency, start_time, end_time):
                          sep=',')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df = df.sort_values('timestamp', ascending=True)
-    if isinstance(start_time, datetime):
+    if isinstance(start_time, datetime.datetime):
         start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
-    if isinstance(end_time, datetime):
+    if isinstance(end_time, datetime.datetime):
         end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
 
     mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
@@ -82,6 +82,7 @@ class DashboardNewsData:
     @staticmethod
     def dashboard_news_articles_to_show(currency, start_time, end_time):
         df = DashboardNewsData._load_news_df(currency, start_time, end_time)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
         if len(df) == 0:
             df.index = df['timestamp']
             del df['sponsored']
@@ -97,7 +98,7 @@ class DashboardNewsData:
         df.index = df['timestamp']
         del df['sponsored']
         del df['labels']
-        del df['timestamp']
+        # del df['timestamp']
         return df
 
     @staticmethod
@@ -127,9 +128,9 @@ class DashboardNewsData:
 
     @staticmethod
     def _load_news_df(currency, start_time, end_time):
-        if isinstance(start_time, datetime):
+        if isinstance(start_time, datetime.datetime):
             start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
-        if isinstance(end_time, datetime):
+        if isinstance(end_time, datetime.datetime):
             end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
 
         if currency == 'BTC':
