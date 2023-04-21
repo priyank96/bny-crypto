@@ -107,9 +107,9 @@ with tab_overview:
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="inverse", help=f'Risk of Price Fall in next 6 hours')
-    col2.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", help=f'Last trade price value in USD at {end_time}')
-    col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", help=f'Units of cryptocurrency traded in last {time_interval}')
+    col1.metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
+    col2.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
+    col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
     with st.expander(f'Maximum Draw Down ({lookback_period})', expanded=True):
         st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
@@ -144,6 +144,8 @@ with tab_news:
         st.markdown("""
         * Show Press Releases
         * News Named Entity Word Cloud
+        * Add news sorting by ['latest', 'popular'] and ['positive', 'negative', 'neutral']
+        * Add price and FMDD to graph lines overlaid on news sentiment
         """)
 
     with st.expander(f"News Sentiment Trend ({lookback_period})", expanded=True):
