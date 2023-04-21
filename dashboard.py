@@ -31,6 +31,7 @@ st.markdown("""
         }
     </style>""", unsafe_allow_html=True)
 
+
 padding = 0
 st.markdown(f""" <style>
     .reportview-container .main .block-container{{
@@ -38,15 +39,21 @@ st.markdown(f""" <style>
         padding-right: {padding}rem;
         padding-left: {padding}rem;
         padding-bottom: {padding}rem;
-    }} </style> """, unsafe_allow_html=True)
+    }}
+    div.block-container {{
+        padding-top: {padding}rem;
+        padding-bottom: {padding}rem;
+    }}
+       </style> """, unsafe_allow_html=True)
 
 with st.sidebar:
+    st.image("images/bnym_logo.png", width=200)
     st.image("images/crisys_logo.png", width=200)
     st.title("Dashboard")
-    asset = st.selectbox("Choose Asset:", ["BTC", "ETH"])
+    asset = st.selectbox("Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
     lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"])
-    starting_date = datetime.datetime(2022, 2, 21, 5, 0, 0, 0) # Dummy value
+    starting_date = datetime.datetime(2022, 2, 24, 5, 0, 0, 0) # Dummy value
     date = st.date_input("End Date:", starting_date)
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
     end_time = st.time_input("End Time:", streamlit_helpers.round_time(starting_date, mins_delta=30))
@@ -70,10 +77,10 @@ st.markdown(f"""
         color: #e3a72f;
     }}
 </style>
-<h3>Dashboard for <span class='highlight'>{asset}</span> 
+<h4>Dashboard for <span class='highlight'>{asset}</span> 
 in <span class='highlight'>{time_interval}</span> 
 intervals and <span class='highlight'>{lookback_period}</span> lookback period
-at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h3>
+at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h4>
 """, unsafe_allow_html=True)
 # st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
 # st.markdown('----')
@@ -87,26 +94,36 @@ with tab_overview:
     # FMDD Numbers
     price_data_df_24h = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
     fmdd_values = [round(x,3) for x in price_data_df_24h['Forward MDD'].values]
-    fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/(fmdd_values[-1]+10**-9),1)
+    if fmdd_values[-2] == 0:
+        fmdd_delta = 100
+    else:
+        fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/fmdd_values[-2],1)
     # Price Numbers
     price_values = [round(x,3) for x in price_data_df_24h['close'].values]
-    price_delta = round(100*(price_values[-1]-price_values[-2])/(price_values[-1]+10**-9),1)
+    price_delta = round(100*(price_values[-1]-price_values[-2])/price_values[-2],1)
     # Volume Numbers
     volume_values = [round(x,0) for x in price_data_df_24h['volume'].values]
-    volume_delta = round(100*(volume_values[-1]-volume_values[-2])/(volume_values[-1]+10**-9),1)
+    volume_delta = round(100*(volume_values[-1]-volume_values[-2])/(volume_values[-2]),1)
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric(label="Forward MDD - Risk of Price Fall", value=fmdd_values[-1], delta=f"{fmdd_delta}%", delta_color="inverse")
-    col2.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}%")
-    col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}%")
+    col1.metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="inverse", help=f'Risk of Price Fall in next 6 hours')
+    col2.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", help=f'Last trade price value in USD at {end_time}')
+    col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", help=f'Units of cryptocurrency traded in last {time_interval}')
     
-    st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
-                                                   line_name="Forward MDD", line_color='red', fill='tozeroy', title=f'Forward MDD ({lookback_period})'),
-                        use_container_width=True)
+    with st.expander(f'Maximum Draw Down ({lookback_period})', expanded=True):
+        st.plotly_chart(plots.line_plot_single(price_data_df_24h, column_x = 'timestamp', column_y='Forward MDD', 
+                                                    line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
+                                                    add_hline=True, hline_value=0.03, hline_color='red', hline_annotation_text='High Risk Threshold'),
+                            use_container_width=True)
 
-    st.plotly_chart(plots.line_plot_double_shared(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', 
-                                                   line_name1="Price", line_name2='Volume', line_color1=highlight_color, title=f'Price and Volume ({lookback_period}) Shared'),
-                        use_container_width=True)
+    with st.expander(f'Price and Volume ({lookback_period}) Shared', expanded=True):
+        st.plotly_chart(plots.line_plot_double_shared(price_data_df_24h, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
+                                                    line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
+                            use_container_width=True)
+    
+    # if st.button("<- 30 Min"):
+    #     end_time = end_time - pd.to_timedelta(-30, unit='m')
+    #     st.experimental_rerun()
 
 
