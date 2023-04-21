@@ -52,8 +52,8 @@ with st.sidebar:
     st.title("Dashboard")
     asset = st.selectbox("Asset:", ["BTC", "ETH"])
     time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
-    lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=1)
-    starting_date = datetime.datetime(2022, 2, 24, 5, 0, 0, 0) # Dummy value
+    lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
+    starting_date = datetime.datetime(2022, 6, 30, 11, 0, 0, 0) # Dummy value
     date = st.date_input("End Date:", starting_date)
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
     end_time = st.time_input("End Time:", streamlit_helpers.round_time(starting_date, mins_delta=30))
@@ -146,7 +146,7 @@ with tab_news:
         * News Named Entity Word Cloud
         """)
 
-    with st.expander(f"News Sentiment Trend", expanded=True):
+    with st.expander(f"News Sentiment Trend ({lookback_period})", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
         df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
         if len(df) == 0:
