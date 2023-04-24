@@ -67,6 +67,9 @@ theme_alert = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red',
 
 if 'load_time' not in st.session_state:
     st.session_state['load_time'] = datetime.datetime(2022, 6, 30, 11, 0, 0, 0) # Dummy value replace with datetime.datetime.now()
+if 'ti_selected_values' not in st.session_state: # Default values
+    st.session_state['ti_selected_values'] = ['volume', 'rsi', 'volatility', 'var_90']
+
 with st.sidebar:
     st.image("images/bnym_logo.png", width=200, )
     st.image("images/crisys_logo.png", width=200)
@@ -245,18 +248,24 @@ with tab_ti:
         * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
         """)
 
-    selected_values = st.multiselect(
-        label='Select Technical Indicators',
-        options=price_data_df.columns,
-        default=['volume', 'rsi', 'volatility', 'var_90'],
-        key='ti_selected_values'
+    
+    
+    # col_list = list(price_data_df.columns)
+    # col_list.pop(0)
+
+
+    st.session_state['ti_selected_values'] = st.multiselect(
+        label='Visualize Technical Indicators',
+        options=list(price_data_df.columns)[2:], # Ignoring timestamp and close
+        default=st.session_state['ti_selected_values'],
     )
 
-    for selected_value in selected_values:
+    for selected_value in st.session_state['ti_selected_values']:
 
         selected_value_name = selected_value.capitalize()
         if selected_value == 'rsi':
             selected_value_name = 'RSI'
+
             
 
         with st.expander(f'{selected_value_name} history ({lookback_period}) Shared', expanded=True):
