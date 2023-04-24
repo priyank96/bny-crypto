@@ -128,6 +128,25 @@ def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, l
     else:
         x = df[column_x]
     fig.add_trace(go.Line(x=x, y=df[column_y1], fill=line_fill1, name=line_name1, marker=dict(color=line_color1)), secondary_y=False)
+    fig.add_trace(go.Line(x=x, y=df[column_y2], name=line_name2, marker=dict(color=line_color2, opacity=0.4)), secondary_y=True)
+    if title is not None:
+        fig.update_layout(title_text=title)
+        layout_margin_top=30
+    else:
+        layout_margin_top=10
+    fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300)
+    # fig.update_layout(yaxis2 = dict(range=[0, 8000]))
+    fig['data'][0]['showlegend'] = True
+    return fig
+
+def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None):
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
+    if column_x is None:
+        x = df.index
+    else:
+        x = df[column_x]
+    fig.add_trace(go.Line(x=x, y=df[column_y1], fill=line_fill1, name=line_name1, marker=dict(color=line_color1)), secondary_y=False)
     fig.add_trace(go.Bar(x=x, y=df[column_y2], name=line_name2, marker=dict(color=line_color2, opacity=0.4)), secondary_y=True)
     if title is not None:
         fig.update_layout(title_text=title)

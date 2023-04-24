@@ -14,6 +14,11 @@ import random
 
 from event_data import DashboardNewsData # In event_data/api.py
 
+import bing_chatbot
+import asyncio
+from EdgeGPT import Chatbot, ConversationStyle
+import json
+
 # Page config. Other configs are loaded from .streamlit/config.toml
 st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
                    page_icon="images/crisys_logo.png", layout="wide", initial_sidebar_state="auto", menu_items=None)
@@ -131,8 +136,10 @@ elif 'd' in lookback_period:
     num_lookback_points = (int(lookback_period.split('d')[0]) * 24 * 2) + 1
 price_data_df = pd.read_csv("new_values.csv")
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
+news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
+article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
 
-tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Technical Indictors", "💬 CRISys Chat", "🤔 More?"])
+tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Technical Indictors", "💬 CrisysGPT Chat", "🤔 More?"])
 
 with tab_overview:
     
@@ -193,15 +200,13 @@ with tab_news:
 
     with st.expander(f"News Sentiment Trend ({lookback_period})", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
-        df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
-        if len(df) == 0:
+        if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
         else:
-            st.plotly_chart(plots.line_plot_single(df, column_y='sentiment', line_name='News Sentiment Trend'),
+            st.plotly_chart(plots.line_plot_single(news_sentiment_df, column_y='sentiment', line_name='News Sentiment Trend'),
                             use_container_width=True)
 
     with st.expander(f"News Articles", expanded=True):
-        article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
         # article_df.set_index('timestamp', inplace=True)
         order = st.selectbox('Sort By', ['Latest', 'Top Positive', 'Top Negative', 'Top Neutral'], index=0)
         if order == 'Latest':
@@ -277,7 +282,7 @@ with tab_chat:
         * Ask questions
         """)
     #Creating the chatbot interface
-    st.title("CRISys Bot : ChatGPT Integration")
+    st.write("Ask CRISysGPT a question!")
 
     # Storing the chat
     if 'generated' not in st.session_state:
@@ -286,8 +291,22 @@ with tab_chat:
     if 'past' not in st.session_state:
         st.session_state['past'] = []
 
-    def generate_response(prompt):
-        return "Amazingly Insightful ChatGPT Response"
+    with hc.HyLoader('Loading',hc.Loaders.standard_loaders,index=0):
+        async def ask_bing(input_prompt):
+            # return "Amazingly Insightful ChatGPT Response"
+            bot = Chatbot(cookies=bing_chatbot.BING_COOKIES_FILE)
+            # input_prompt = input("User: ")
+            wait_count = 0
+            while True:
+                reply_dict = await bot.ask(prompt=input_prompt, conversation_style=ConversationStyle.precise, wss_link="wss://sydney.bing.com/sydney/ChatHub")
+                # print(f"User: {reply_dict['item']['messages'][0]['text']}")
+                reply = reply_dict['item']['messages'][1]['text']
+                if 'Searching the web for' not in reply:
+                    await bot.close()
+                    return reply
+    # def generate_response(input_prompt):
+    #     return bing_chatbot.ask_bing(input_prompt)
+        # return "Amazingly Insightful ChatGPT Response"
         # completions = openai.Completion.create(
         #     engine = "text-davinci-003",
         #     prompt = prompt,
@@ -302,14 +321,31 @@ with tab_chat:
     if st.session_state['generated']:
     
         for i in range(len(st.session_state['generated'])):
-            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
-            message(st.session_state["generated"][i], key=str(i))
+            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
+            message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
 
-    input_text = st.text_input("Ask: ","What was the most impactful news and tweets today?", key="input")
+    input_text = st.text_input("Ask: ","What were the most impactful news and tweets today?", key="input")
     ask = st.button("Ask", key="ask")
 
     if ask:
-        output = generate_response(input_text)
+        input_prompt = f"""
+                        I want you to summarize what happened today and advice what will happen to {asset}.
+                        Do not use the internet to answer this question and do not use any information beyond {end_time}.
+                        Do not mention that you cannot provide financial advice. 
+                        Be brief and to the point.
+                        {asset} price from past to now in 30 minute increaments: {list(price_data_df['close'].values[-10:])}
+                        Top News: {article_df['title'].values[-10:]}
+                        Top Tweets: {None}
+                        Please advice on: {input_text}.
+                        Consider 'today' as {end_time} and everything else relative.
+                        """
+        print(f"{len(input_prompt)} char input: {input_prompt}")
+        
+        output = asyncio.run(ask_bing(input_prompt))
+        output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
+        
+        # time.sleep(30)
+        print(f"output: {output}")
         # store the output 
         st.session_state.past.append(input_text)
         st.session_state.generated.append(output)
