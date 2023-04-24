@@ -4,7 +4,6 @@ import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
 import plotly.express as px  # interactive charts
 import datetime
-from datetime import timedelta
 
 import streamlit as st  # 🎈 data web app development
 import streamlit_helpers
@@ -46,51 +45,70 @@ st.markdown(f""" <style>
     }}
        </style> """, unsafe_allow_html=True)
 
+if 'load_time' not in st.session_state:
+    st.session_state['load_time'] = datetime.datetime(2022, 6, 30, 11, 0, 0, 0) # Dummy value replace with datetime.datetime.now()
 with st.sidebar:
     st.image("images/bnym_logo.png", width=200)
     st.image("images/crisys_logo.png", width=200)
-    st.title("Dashboard")
-    asset = st.selectbox("Asset:", ["BTC", "ETH"])
-    time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
-    lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
-    starting_date = datetime.datetime(2022, 6, 30, 11, 0, 0, 0) # Dummy value
-    date = st.date_input("End Date:", starting_date)
+    st.title("Dashboard Configuration")
+    
+    asset = st.selectbox("Cryptocurrency:", ["BTC", "ETH", "XRP", "SOL"])
+    # time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
+    time_interval = '30Min'
+    # lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
+    lookback_period = st.select_slider("Lookback Period:", options=["6h", "12h", "24h","3d", "7d"], value="24h")
+    
+    date = st.date_input("End Date:", st.session_state['load_time'])
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
-    end_time = st.time_input("End Time:", streamlit_helpers.round_time(starting_date, mins_delta=30))
+    end_time = st.time_input("End Time:", streamlit_helpers.round_time(st.session_state['load_time'], mins_delta=30), step=datetime.timedelta(minutes=30))
     # end_time = st.time_input("Start Time:")
     end_time = datetime.datetime.combine(date, end_time)
+    st.session_state['load_time'] = end_time
     if end_time > datetime.datetime.now():
         st.error("Start Time cannot be in the future!")
     start_time = end_time - pd.to_timedelta(lookback_period)
-
-    if st.button("Refresh"):
+    col1, col2 =  st.columns(2)
+    if col1.button("⏪ 6 hours"):
+        # Refresh page with -6 hours delta
+        # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
+        st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta("6h")
         st.experimental_rerun()
+    if col2.button("6 hours ⏩"):
+        # Refresh page with -6 hours delta
+        # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
+        st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta("6h")
+        st.experimental_rerun()
+
+    
 
 # Main Body
 highlight_color = '#e3a72f'
-st.markdown(f"""
-<style>
-    div.block-container{{
-        padding-top: 0;
-    }}
-    .highlight{{
-        color: #e3a72f;
-    }}
-</style>
-<h4>Dashboard for <span class='highlight'>{asset}</span> 
-in <span class='highlight'>{time_interval}</span> 
-intervals and <span class='highlight'>{lookback_period}</span> lookback period
-at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h4>
-""", unsafe_allow_html=True)
+# st.markdown(f"""
+# <style>
+#     div.block-container{{
+#         padding-top: 0;
+#     }}
+#     .highlight{{
+#         color: #e3a72f;
+#     }}
+# </style>
+# <h4>Dashboard for <span class='highlight'>{asset}</span> 
+# in <span class='highlight'>{time_interval}</span> 
+# intervals and <span class='highlight'>{lookback_period}</span> lookback period
+# at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h4>
+# """, unsafe_allow_html=True)
 # st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
 # st.markdown('----')
 
 price_data_df = pd.read_csv("new_values.csv")
 
-tab_overview, tab_social, tab_news, tab_ti, tab4 = st.tabs(["Overview 🚨", "Twitter 🐦", "News 📰", "Technical Indictors 📈", "More? 🤔"])
+tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["Overview 🚨", "Twitter 🐦", "News 📰", "Technical Indictors 📈", "Chat 💬", "More? 🤔"])
 
 with tab_overview:
-    num_lookback_points = int(lookback_period.split('h')[0]) * 2 + 1 # 24h * 2 + 1
+    if 'h' in lookback_period:
+        num_lookback_points = (int(lookback_period.split('h')[0]) * 2) + 1 # 24h * 2 + 1
+    elif 'd' in lookback_period:
+        num_lookback_points = (int(lookback_period.split('d')[0]) * 24 * 2) + 1
     # FMDD Numbers
     price_data_df_24h = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
     fmdd_values = [round(x,3) for x in price_data_df_24h['Forward MDD'].values]
@@ -144,7 +162,6 @@ with tab_news:
         st.markdown("""
         * Show Press Releases
         * News Named Entity Word Cloud
-        * Add news sorting by ['latest', 'popular'] and ['positive', 'negative', 'neutral']
         * Add price and FMDD to graph lines overlaid on news sentiment
         """)
 
@@ -157,10 +174,20 @@ with tab_news:
             st.plotly_chart(plots.line_plot_single(df, column_y='sentiment', line_name='News Sentiment Trend'),
                             use_container_width=True)
 
-    with st.expander(f"Latest News Summary", expanded=True):
+    with st.expander(f"News Summary", expanded=True):
         article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
         # article_df.set_index('timestamp', inplace=True)
-        article_df.sort_index(inplace=True, ascending=False)
+        order = st.selectbox('Sort By', ['Latest', 'Top Positive', 'Top Negative', 'Top Neutral'], index=0)
+        if order == 'Latest':
+            article_df.sort_index(inplace=True, ascending=False)
+        else:
+            article_df.sort_index(inplace=True, ascending=False)
+            if order == 'Top Positive':
+                article_df = article_df[article_df['sentiment_logits'] == 'Positive']
+            elif order == 'Top Negative':
+                article_df = article_df[article_df['sentiment_logits'] == 'Negative']
+            elif order == 'Top Neutral':
+                article_df = article_df[article_df['sentiment_logits'] == 'Neutral']
         
         if len(article_df) == 0:
             st.write("No Articles In this Time Period")
@@ -177,6 +204,13 @@ with tab_ti:
         * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
         """)
 
+with tab_chat:
+    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+        st.markdown("""
+        * Chatbot
+        * Summarize
+        * Ask questions
+        """)
 
 with tab4:
 
