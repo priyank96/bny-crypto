@@ -243,10 +243,10 @@ with tab_news:
             # """ + (i != article_df.index[len(article_df) - 1])*'<hr/>', unsafe_allow_html=True)
 
 with tab_ti:
-    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
-        st.markdown("""
-        * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
-        """)
+    # with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+    #     st.markdown("""
+    #     * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
+    #     """)
 
     
     
@@ -255,7 +255,7 @@ with tab_ti:
 
 
     st.session_state['ti_selected_values'] = st.multiselect(
-        label='Visualize Technical Indicators',
+        label='Visualize Multiple Technical Indicators with Price and Volume',
         options=list(price_data_df.columns)[2:], # Ignoring timestamp and close
         default=st.session_state['ti_selected_values'],
     )
