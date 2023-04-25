@@ -8,9 +8,11 @@ import datetime
 import streamlit as st  # 🎈 data web app development
 import hydralit_components as hc
 from streamlit_chat import message
+from streamlit_option_menu import option_menu
 import streamlit_helpers
 from plots import plots
 import random
+import markdown
 
 from event_data import DashboardNewsData # In event_data/api.py
 
@@ -95,23 +97,16 @@ with st.sidebar:
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
         st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta("6h")
+        st.session_state['button_rerun'] = True
         st.experimental_rerun()
     if col2.button("6 hours ▶"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
         st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta("6h")
+        st.session_state['button_rerun'] = True
         st.experimental_rerun()
 
-if 'notifications' not in st.session_state:
-    st.session_state['notifications'] = True
-if 'notifications' in st.session_state and  st.session_state['notifications'] is not None:
-    # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
-    st.error("🚨 Alert Notification Body")
 
-    dismiss_notification = st.button("Dismiss Alerts")
-    if dismiss_notification:
-        st.session_state['notifications'] = None
-        st.experimental_rerun()
 
 
 # Main Body
@@ -142,9 +137,47 @@ price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num
 news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
 article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
 
-tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Technical Indictors", "💬 CrisysGPT Chat", "🤔 More?"])
 
-with tab_overview:
+# Process Notifications
+fmdd_threshold = 0.03
+check_hours = 6
+
+if 'notifications' not in st.session_state:
+    if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
+        st.session_state['notifications'] = [f"Forward MDD was greater than 3% in the last {check_hours} hours"]
+if 'notifications' in st.session_state and  st.session_state['notifications'] is not None:
+    # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
+    notification_list = '\n'.join(st.session_state['notifications'])
+    st.error(f"""
+        🚨 Alert Notification
+        ----
+        {notification_list}
+        """)
+
+
+    dismiss_notification = st.button("Dismiss Alert")
+    if dismiss_notification:
+        st.session_state['notifications'] = None
+        st.session_state['button_rerun'] = True
+        st.experimental_rerun()
+
+# tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Technical Indictors", "💬 CrisysGPT Chat", "🤔 More?"])
+selected_tab = option_menu(None, ["Overview", "Twitter", "News", "Technical Indictors", "CrisysGPT Chat", "More?"],
+                           icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'question-circle-fill'], # Icons from https://icons.getbootstrap.com/
+                           menu_icon="cast", default_index=0, orientation="horizontal")
+if 'selected_tab' not in st.session_state:
+    st.session_state['selected_tab'] = selected_tab
+if selected_tab != st.session_state['selected_tab']:
+    if 'button_rerun' in st.session_state and st.session_state['button_rerun'] is True:
+        st.session_state['button_rerun'] = False
+        selected_tab = st.session_state['selected_tab']
+    else:
+        st.session_state['selected_tab'] = selected_tab
+
+selected_tab = st.session_state['selected_tab'] if 'selected_tab' in st.session_state else selected_tab
+
+# with tab_overview:
+if selected_tab == "Overview":
     
     # FMDD Numbers
     fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
@@ -168,7 +201,7 @@ with tab_overview:
     with st.expander(f'Maximum Draw Down ({lookback_period})', expanded=True):
         st.plotly_chart(plots.line_plot_single(price_data_df, column_x = 'timestamp', column_y='Forward MDD', 
                                                     line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
-                                                    add_hline=True, hline_value=0.03, hline_color='red', hline_annotation_text='High Risk Threshold'),
+                                                    add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
                             use_container_width=True)
 
     with st.expander(f'Price and Volume ({lookback_period}) Shared', expanded=True):
@@ -180,7 +213,8 @@ with tab_overview:
     #     end_time = end_time - pd.to_timedelta(-30, unit='m')
     #     st.experimental_rerun()
 
-with tab_social:
+# with tab_social:
+if selected_tab == "Twitter":
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
         * Twitter Sentiment Trend
@@ -192,7 +226,8 @@ with tab_social:
     with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
         st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-with tab_news:
+# with tab_news:
+if selected_tab == "News":
 
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
@@ -242,7 +277,8 @@ with tab_news:
             #     Sentiment: {row['sentiment_logits']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Topic: {row['class_labels']}
             # """ + (i != article_df.index[len(article_df) - 1])*'<hr/>', unsafe_allow_html=True)
 
-with tab_ti:
+# with tab_ti:
+if selected_tab == "Technical Indictors":
     # with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
     #     st.markdown("""
     #     * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
@@ -283,7 +319,8 @@ with tab_ti:
                                     use_container_width=True)
 
 
-with tab_chat:
+# with tab_chat:
+if selected_tab == "CrisysGPT Chat":
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
         * Chatbot
@@ -291,7 +328,6 @@ with tab_chat:
         * Ask questions
         """)
     #Creating the chatbot interface
-    st.write("Ask CRISysGPT a question!")
 
     # Storing the chat
     if 'generated' not in st.session_state:
@@ -333,7 +369,9 @@ with tab_chat:
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
             message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
 
-    input_text = st.text_input("Ask: ","What were the most impactful news and tweets today?", key="input")
+        input_text = st.text_input(label="Ask CRISysGPT a question: ",value="", key="input", label_visibility="hidden")
+    else:
+        input_text = st.text_input("Ask CRISysGPT a question: ","Summarize today's price and news", key="input")
     ask = st.button("Ask", key="ask")
 
     if ask:
@@ -352,6 +390,8 @@ with tab_chat:
         
         output = asyncio.run(ask_bing(input_prompt))
         output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
+        if output[:9] == "However, ":
+            output = output= output[9:]
         
         # time.sleep(30)
         print(f"output: {output}")
@@ -362,7 +402,8 @@ with tab_chat:
 
     
 
-with tab4:
+# with tab4:
+if selected_tab == "More?":
 
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
