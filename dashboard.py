@@ -145,26 +145,35 @@ check_hours = 6
 if 'notifications' not in st.session_state:
     if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
         st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than 3% in the last {check_hours} hours"]
-if 'notifications' in st.session_state and  st.session_state['notifications'] is not None:
-    # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
-    notification_list = '\n'.join(st.session_state['notifications'])
-    st.error(f"""
-        🚨 Alert Notification
-        ----
-        {notification_list}
-        """)
+if 'notifications' in st.session_state:
+    if st.session_state['notifications'] is not False:
+        # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
+        notification_list = '\n'.join(st.session_state['notifications'])
+        st.error(f"""
+            🚨 Alert Notification
+            ----
+            {notification_list}
+            """)
+        minimize_notification = st.button("Minimize Alert")
+        if minimize_notification:
+            st.session_state['notifications'] = False
+            st.session_state['button_rerun'] = True
+            st.experimental_rerun()
+    elif st.session_state['notifications'] is False:
+        show_notification = st.button("🚨 Show Alert")
+        if show_notification:
+            del st.session_state['notifications']
+            st.session_state['button_rerun'] = True
+            st.experimental_rerun()
 
 
-    dismiss_notification = st.button("Dismiss Alert")
-    if dismiss_notification:
-        st.session_state['notifications'] = None
-        st.session_state['button_rerun'] = True
-        st.experimental_rerun()
 
-# tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Technical Indictors", "💬 CrisysGPT Chat", "🤔 More?"])
-tabs = ["Overview", "Twitter", "News", "Technical Indictors", "CrisysGPT Chat", "More?"]
+    
+
+# tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Tech Indicators", "💬 CrisysGPT Chat", "🤔 More?"])
+tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CrisysGPT Chat', 'More?', 'People']
 selected_tab = option_menu(None, tabs,
-                           icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'question-circle-fill'], # Icons from https://icons.getbootstrap.com/
+                           icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'question-circle-fill','people-fill'], # Icons from https://icons.getbootstrap.com/
                            menu_icon="cast", default_index=0, orientation="horizontal")
 if 'selected_tab' not in st.session_state:
     st.session_state['selected_tab'] = selected_tab
@@ -248,7 +257,7 @@ if selected_tab == tabs[2]:
 
     with st.expander(f"News Articles", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
-        order = st.selectbox('Sort By', ['Latest', 'Top Positive', 'Top Negative', 'Top Neutral'], index=0)
+        order = st.selectbox('Sort By', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
         if order == 'Latest':
             article_df.sort_index(inplace=True, ascending=False)
         else:
@@ -283,7 +292,7 @@ if selected_tab == tabs[2]:
 if selected_tab == tabs[3]:
     # with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
     #     st.markdown("""
-    #     * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
+    #     * Add Important Tech Indicators Graphs (RSI, MACD, etc.)
     #     """)
 
     st.session_state['ti_selected_values'] = st.multiselect(
@@ -341,6 +350,7 @@ if selected_tab == tabs[4]:
             reply_dict = await bot.ask(prompt=input_prompt, conversation_style=ConversationStyle.precise, wss_link="wss://sydney.bing.com/sydney/ChatHub")
             # print(f"User: {reply_dict['item']['messages'][0]['text']}")
             reply = reply_dict['item']['messages'][1]['text']
+            # await bot.reset()
             if 'Searching the web for' not in reply:
                 await bot.close()
                 return reply
