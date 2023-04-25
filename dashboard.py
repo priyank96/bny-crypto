@@ -77,7 +77,7 @@ with st.sidebar:
     st.image("images/crisys_logo.png", width=200)
     st.title("Dashboard Configuration")
     
-    asset = st.selectbox("Cryptocurrency:", ["BTC", "ETH", "XRP", "SOL"])
+    asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
     # time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
     time_interval = '30Min'
     # lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
@@ -92,21 +92,21 @@ with st.sidebar:
     if end_time > datetime.datetime.now():
         st.error("Start Time cannot be in the future!")
     start_time = end_time - pd.to_timedelta(lookback_period)
-    col1, col2 =  st.columns(2)
-    if col1.button("◀ 6 hours"):
+    cols =  st.columns(2)
+    if cols[0].button("◀ 6 hours"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
         st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta("6h")
         st.session_state['button_rerun'] = True
         st.experimental_rerun()
-    if col2.button("6 hours ▶"):
+    if cols[1].button("6 hours ▶"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
         st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta("6h")
         st.session_state['button_rerun'] = True
         st.experimental_rerun()
 
-
+asset = asset[:3]
 
 
 # Main Body
@@ -144,7 +144,7 @@ check_hours = 6
 
 if 'notifications' not in st.session_state:
     if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
-        st.session_state['notifications'] = [f"Forward MDD was greater than 3% in the last {check_hours} hours"]
+        st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than 3% in the last {check_hours} hours"]
 if 'notifications' in st.session_state and  st.session_state['notifications'] is not None:
     # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
     notification_list = '\n'.join(st.session_state['notifications'])
@@ -162,22 +162,24 @@ if 'notifications' in st.session_state and  st.session_state['notifications'] is
         st.experimental_rerun()
 
 # tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Technical Indictors", "💬 CrisysGPT Chat", "🤔 More?"])
-selected_tab = option_menu(None, ["Overview", "Twitter", "News", "Technical Indictors", "CrisysGPT Chat", "More?"],
+tabs = ["Overview", "Twitter", "News", "Technical Indictors", "CrisysGPT Chat", "More?"]
+selected_tab = option_menu(None, tabs,
                            icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'question-circle-fill'], # Icons from https://icons.getbootstrap.com/
                            menu_icon="cast", default_index=0, orientation="horizontal")
 if 'selected_tab' not in st.session_state:
     st.session_state['selected_tab'] = selected_tab
 if selected_tab != st.session_state['selected_tab']:
     if 'button_rerun' in st.session_state and st.session_state['button_rerun'] is True:
-        st.session_state['button_rerun'] = False
         selected_tab = st.session_state['selected_tab']
     else:
         st.session_state['selected_tab'] = selected_tab
 
+st.session_state['button_rerun'] = False
+
 selected_tab = st.session_state['selected_tab'] if 'selected_tab' in st.session_state else selected_tab
 
 # with tab_overview:
-if selected_tab == "Overview":
+if selected_tab == tabs[0]:
     
     # FMDD Numbers
     fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
@@ -192,11 +194,11 @@ if selected_tab == "Overview":
     volume_values = [round(x,0) for x in price_data_df['volume'].values]
     volume_delta = round(100*(volume_values[-1]-volume_values[-2])/(volume_values[-2]),1)
 
-    col1, col2, col3 = st.columns(3)
+    cols = st.columns(3)
 
-    col1.metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
-    col2.metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
-    col3.metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
+    cols[0].metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
+    cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
+    cols[2].metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
     with st.expander(f'Maximum Draw Down ({lookback_period})', expanded=True):
         st.plotly_chart(plots.line_plot_single(price_data_df, column_x = 'timestamp', column_y='Forward MDD', 
@@ -214,7 +216,7 @@ if selected_tab == "Overview":
     #     st.experimental_rerun()
 
 # with tab_social:
-if selected_tab == "Twitter":
+if selected_tab == tabs[1]:
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
         * Twitter Sentiment Trend
@@ -227,7 +229,7 @@ if selected_tab == "Twitter":
         st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
 # with tab_news:
-if selected_tab == "News":
+if selected_tab == tabs[2]:
 
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
@@ -278,17 +280,11 @@ if selected_tab == "News":
             # """ + (i != article_df.index[len(article_df) - 1])*'<hr/>', unsafe_allow_html=True)
 
 # with tab_ti:
-if selected_tab == "Technical Indictors":
+if selected_tab == tabs[3]:
     # with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
     #     st.markdown("""
     #     * Add Important Technical Indictors Graphs (RSI, MACD, etc.)
     #     """)
-
-    
-    
-    # col_list = list(price_data_df.columns)
-    # col_list.pop(0)
-
 
     st.session_state['ti_selected_values'] = st.multiselect(
         label='Visualize Multiple Technical Indicators with Price and Volume',
@@ -320,7 +316,7 @@ if selected_tab == "Technical Indictors":
 
 
 # with tab_chat:
-if selected_tab == "CrisysGPT Chat":
+if selected_tab == tabs[4]:
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
         * Chatbot
@@ -336,19 +332,18 @@ if selected_tab == "CrisysGPT Chat":
     if 'past' not in st.session_state:
         st.session_state['past'] = []
 
-    with hc.HyLoader('Loading',hc.Loaders.standard_loaders,index=0):
-        async def ask_bing(input_prompt):
-            # return "Amazingly Insightful ChatGPT Response"
-            bot = Chatbot(cookies=bing_chatbot.BING_COOKIES_FILE)
-            # input_prompt = input("User: ")
-            wait_count = 0
-            while True:
-                reply_dict = await bot.ask(prompt=input_prompt, conversation_style=ConversationStyle.precise, wss_link="wss://sydney.bing.com/sydney/ChatHub")
-                # print(f"User: {reply_dict['item']['messages'][0]['text']}")
-                reply = reply_dict['item']['messages'][1]['text']
-                if 'Searching the web for' not in reply:
-                    await bot.close()
-                    return reply
+    async def ask_bing(input_prompt):
+        # return "Amazingly Insightful ChatGPT Response"
+        bot = Chatbot(cookies=bing_chatbot.BING_COOKIES_FILE)
+        # input_prompt = input("User: ")
+        wait_count = 0
+        while True:
+            reply_dict = await bot.ask(prompt=input_prompt, conversation_style=ConversationStyle.precise, wss_link="wss://sydney.bing.com/sydney/ChatHub")
+            # print(f"User: {reply_dict['item']['messages'][0]['text']}")
+            reply = reply_dict['item']['messages'][1]['text']
+            if 'Searching the web for' not in reply:
+                await bot.close()
+                return reply
     # def generate_response(input_prompt):
     #     return bing_chatbot.ask_bing(input_prompt)
         # return "Amazingly Insightful ChatGPT Response"
@@ -371,27 +366,28 @@ if selected_tab == "CrisysGPT Chat":
 
         input_text = st.text_input(label="Ask CRISysGPT a question: ",value="", key="input", label_visibility="hidden")
     else:
-        input_text = st.text_input("Ask CRISysGPT a question: ","Summarize today's price and news", key="input")
+        input_text = st.text_input("Ask CRISysGPT a question: ",placeholder="Summarize today's price and news", key="input")
     ask = st.button("Ask", key="ask")
 
     if ask:
-        input_prompt = f"""
-                        I want you to summarize what happened today and advice what will happen to {asset}.
-                        Do not use the internet to answer this question and do not use any information beyond {end_time}.
-                        Do not mention that you cannot provide financial advice. 
-                        Be brief and to the point.
-                        {asset} price from past to now in 30 minute increaments: {list(price_data_df['close'].values[-10:])}
-                        Top News: {article_df['title'].values[-10:]}
-                        Top Tweets: {None}
-                        Please advice on: {input_text}.
-                        Consider 'today' as {end_time} and everything else relative.
-                        """
-        print(f"{len(input_prompt)} char input: {input_prompt}")
-        
-        output = asyncio.run(ask_bing(input_prompt))
-        output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
-        if output[:9] == "However, ":
-            output = output= output[9:]
+        with st.spinner('Loading...'):
+            input_prompt = f"""
+                            I want you to summarize what happened today and what will happen to {asset}.
+                            Do not use any information beyond {end_time}.
+                            Be brief and to the point.
+                            {asset} price from past to now in 30 minute increaments: {list(price_data_df['close'].values[-10:])}
+                            Top News: {article_df['title'].values[-10:]}
+                            Top Tweets: {None}
+                            Please advice on: {input_text}.
+                            Consider 'today' as {end_time} and everything else relative.
+                            """
+            print(f"{len(input_prompt)} char input: {input_prompt}")
+            
+            
+            output = asyncio.run(ask_bing(input_prompt))
+            output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
+            if output[:9] == "However, ":
+                output = output= output[9:]
         
         # time.sleep(30)
         print(f"output: {output}")
@@ -403,7 +399,7 @@ if selected_tab == "CrisysGPT Chat":
     
 
 # with tab4:
-if selected_tab == "More?":
+if selected_tab == tabs[5]:
 
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
@@ -412,9 +408,9 @@ if selected_tab == "More?":
         * Open to ideas
         """)
 
-    col1, col2, col3 = st.columns(3)
+    cols = st.columns(3)
 
-    with col1:
+    with cols[0]:
         if asset == "BTC":  # Show BTC Fear and Greed Index
             with st.expander(f"Fear & Greed Index", expanded=True):
                 st.image(
