@@ -80,8 +80,8 @@ with st.sidebar:
     asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
     # time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
     time_interval = '30Min'
-    # lookback_period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
-    lookback_period = st.select_slider("Lookback Period:", options=["6h", "12h", "24h","3d", "7d"], value="24h")
+    # period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
+    period = st.select_slider("Period:", options=['3h', '6h', '12h', '24h', '2d', '4d', '7d', '14d'], value='24h')
     
     date = st.date_input("End Date:", st.session_state['load_time'])
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
@@ -91,17 +91,17 @@ with st.sidebar:
     st.session_state['load_time'] = end_time
     if end_time > datetime.datetime.now():
         st.error("Start Time cannot be in the future!")
-    start_time = end_time - pd.to_timedelta(lookback_period)
+    start_time = end_time - pd.to_timedelta(period)
     cols =  st.columns(2)
     if cols[0].button("◀ 6 hours"):
         # Refresh page with -6 hours delta
-        # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
+        # end_time = datetime.datetime.now() - pd.to_timedelta(period)
         st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta("6h")
         st.session_state['button_rerun'] = True
         st.experimental_rerun()
     if cols[1].button("6 hours ▶"):
         # Refresh page with -6 hours delta
-        # end_time = datetime.datetime.now() - pd.to_timedelta(lookback_period)
+        # end_time = datetime.datetime.now() - pd.to_timedelta(period)
         st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta("6h")
         st.session_state['button_rerun'] = True
         st.experimental_rerun()
@@ -122,16 +122,16 @@ highlight_color = '#e3a72f'
 # </style>
 # <h4>Dashboard for <span class='highlight'>{asset}</span> 
 # in <span class='highlight'>{time_interval}</span> 
-# intervals and <span class='highlight'>{lookback_period}</span> lookback period
+# intervals and <span class='highlight'>{period}</span> lookback period
 # at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h4>
 # """, unsafe_allow_html=True)
-# st.title(f"Dashboard for {asset} in {time_interval} intervals and {lookback_period} lookback period")
+# st.title(f"Dashboard for {asset} in {time_interval} intervals and {period} lookback period")
 # st.markdown('----')
 
-if 'h' in lookback_period:
-    num_lookback_points = (int(lookback_period.split('h')[0]) * 2) + 1 # 24h * 2 + 1
-elif 'd' in lookback_period:
-    num_lookback_points = (int(lookback_period.split('d')[0]) * 24 * 2) + 1
+if 'h' in period:
+    num_lookback_points = (int(period.split('h')[0]) * 2) + 1 # 24h * 2 + 1
+elif 'd' in period:
+    num_lookback_points = (int(period.split('d')[0]) * 24 * 2) + 1
 price_data_df = pd.read_csv("new_values.csv")
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
 news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
@@ -209,13 +209,13 @@ if selected_tab == tabs[0]:
     cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
     cols[2].metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
-    with st.expander(f'Maximum Draw Down ({lookback_period})', expanded=True):
+    with st.expander(f'Maximum Draw Down ({period})', expanded=True):
         st.plotly_chart(plots.line_plot_single(price_data_df, column_x = 'timestamp', column_y='Forward MDD', 
                                                     line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
                                                     add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
                             use_container_width=True)
 
-    with st.expander(f'Price and Volume ({lookback_period}) Shared', expanded=True):
+    with st.expander(f'Price and Volume ({period}) Shared', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
                                                     line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
                             use_container_width=True)
@@ -247,7 +247,7 @@ if selected_tab == tabs[2]:
         * Add price and FMDD to graph lines overlaid on news sentiment
         """)
 
-    with st.expander(f"News Sentiment Trend ({lookback_period})", expanded=True):
+    with st.expander(f"News Sentiment Trend ({period})", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
         if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
@@ -257,7 +257,7 @@ if selected_tab == tabs[2]:
 
     with st.expander(f"News Articles", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
-        order = st.selectbox('Sort By', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
+        order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
         if order == 'Latest':
             article_df.sort_index(inplace=True, ascending=False)
         else:
@@ -309,7 +309,7 @@ if selected_tab == tabs[3]:
 
             
 
-        with st.expander(f'{selected_value_name} history ({lookback_period}) Shared', expanded=True):
+        with st.expander(f'{selected_value_name} history ({period}) Shared', expanded=True):
             if selected_value == 'volume':
                 st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2=selected_value, line_fill1=None, line_fill2='tozeroy',
                                                             line_name1="Price", line_name2=selected_value_name, line_color1=highlight_color, line_color2='grey'),
