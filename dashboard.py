@@ -354,6 +354,12 @@ if selected_tab == tabs[4]:
             if 'Searching the web for' not in reply:
                 await bot.close()
                 return reply
+
+    async def reset_bing():
+        # return "Amazingly Insightful ChatGPT Response"
+        bot = Chatbot(cookies=bing_chatbot.BING_COOKIES_FILE)
+        await bot.reset()
+        await bot.close()
     # def generate_response(input_prompt):
     #     return bing_chatbot.ask_bing(input_prompt)
         # return "Amazingly Insightful ChatGPT Response"
@@ -377,19 +383,22 @@ if selected_tab == tabs[4]:
         input_text = st.text_input(label="Ask CRISysGPT a question: ",value="", key="input", label_visibility="hidden")
     else:
         input_text = st.text_input("Ask CRISysGPT a question: ",placeholder="Summarize today's price and news", key="input")
-    ask = st.button("Ask", key="ask")
+    cols = st.columns(4)
+    ask = cols[0].button("Ask", key="ask")
+    reset_chat = cols[-1].button("Reset Chat", key="reset_chat")
 
     if ask:
         with st.spinner('Loading...'):
+            lookback_interval = 6
             input_prompt = f"""
                             I want you to summarize what happened today and what will happen to {asset}.
                             Do not use any information beyond {end_time}.
                             Be brief and to the point.
-                            {asset} price from past to now in 30 minute increaments: {list(price_data_df['close'].values[-10:])}
-                            Top News: {article_df['title'].values[-10:]}
+                            {asset} price from {lookback_interval} hours ago to now in 30 minute increments: {list(price_data_df['close'].values[-(lookback_interval*2):])}
+                            Latest News: {article_df['title'].values[-(lookback_interval*2):]}
                             Top Tweets: {None}
-                            Please advice on: {input_text}.
                             Consider 'today' as {end_time} and everything else relative.
+                            {input_text}.
                             """
             print(f"{len(input_prompt)} char input: {input_prompt}")
             
@@ -406,7 +415,11 @@ if selected_tab == tabs[4]:
         st.session_state.generated.append(output)
         st.experimental_rerun()
 
-    
+    if reset_chat:
+        asyncio.run(reset_bing())
+        st.session_state['generated'] = []
+
+
 
 # with tab4:
 if selected_tab == tabs[5]:
