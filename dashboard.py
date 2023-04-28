@@ -73,8 +73,8 @@ if 'ti_selected_values' not in st.session_state: # Default values
     st.session_state['ti_selected_values'] = ['volume', 'rsi', 'volatility', 'var_90']
 
 with st.sidebar:
-    st.image("images/bnym_logo.png", width=200, )
-    st.image("images/crisys_logo.png", width=200)
+    # st.image("images/bnym_logo.png", width=200, )
+    st.image("images/crisys_bnym_logo.png", width=200)
     st.title("Dashboard Configuration")
     
     asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
@@ -144,23 +144,25 @@ check_hours = 6
 
 if 'notifications' not in st.session_state:
     if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
-        st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than 3% in the last {check_hours} hours"]
+        st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than {fmdd_threshold*100}% in the last {check_hours} hours"]
 if 'notifications' in st.session_state:
     if st.session_state['notifications'] is not False:
         # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
         notification_list = '\n'.join(st.session_state['notifications'])
-        st.error(f"""
+        cols = st.columns([11, 1])
+        cols[0].error(f"""
             🚨 Alert Notification
-            ----
+
             {notification_list}
             """)
-        minimize_notification = st.button("Minimize Alert")
+        minimize_notification = cols[1].button("X")
         if minimize_notification:
             st.session_state['notifications'] = False
             st.session_state['button_rerun'] = True
             st.experimental_rerun()
     elif st.session_state['notifications'] is False:
-        show_notification = st.button("🚨 Show Alert")
+        cols = st.columns([5, 1])
+        show_notification = cols[1].button("🚨 Show Alert")
         if show_notification:
             del st.session_state['notifications']
             st.session_state['button_rerun'] = True
@@ -209,13 +211,14 @@ if selected_tab == tabs[0]:
     cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
     cols[2].metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
-    with st.expander(f'Maximum Draw Down ({period})', expanded=True):
+    cols = st.columns(2)
+    with cols[0].expander(f'Maximum Draw Down ({period})', expanded=True):
         st.plotly_chart(plots.line_plot_single(price_data_df, column_x = 'timestamp', column_y='Forward MDD', 
                                                     line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
                                                     add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
                             use_container_width=True)
 
-    with st.expander(f'Price and Volume ({period}) Shared', expanded=True):
+    with cols[1] .expander(f'Price and Volume ({period}) Shared', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
                                                     line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
                             use_container_width=True)
@@ -242,6 +245,7 @@ if selected_tab == tabs[2]:
 
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
+        * Update News Sentiment Trend to add meaning
         * Show Press Releases
         * News Named Entity Word Cloud
         * Add price and FMDD to graph lines overlaid on news sentiment
@@ -380,6 +384,19 @@ if selected_tab == tabs[4]:
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
             message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
 
+        st.components.v1.html(f"""
+                                <script>
+                                    function scroll(dummy_var_to_force_repeat_execution){{
+                                        var textAreas = parent.document.querySelectorAll('section.main');
+                                        for (let index = 0; index < textAreas.length; index++) {{
+                                            textAreas[index].style.color = 'red'
+                                            textAreas[index].scrollTop = textAreas[index].scrollHeight;
+                                        }}
+                                    }}
+                                    scroll({len(st.session_state['generated'])+len(st.session_state['past'])})
+                                </script>
+                                """)
+
         input_text = st.text_input(label="Ask CRISysGPT a question: ",value="", key="input", label_visibility="hidden")
     else:
         input_text = st.text_input("Ask CRISysGPT a question: ",placeholder="Summarize today's price and news", key="input")
@@ -388,7 +405,7 @@ if selected_tab == tabs[4]:
     reset_chat = cols[-1].button("Reset Chat", key="reset_chat")
 
     if ask:
-        with st.spinner('Loading...'):
+        with st.spinner('🤔 Thinking...'):
             lookback_interval = 6
             input_prompt = f"""
                             I want you to summarize what happened today and what will happen to {asset}.
@@ -398,6 +415,7 @@ if selected_tab == tabs[4]:
                             Latest News: {article_df['title'].values[-(lookback_interval*2):]}
                             Top Tweets: {None}
                             Consider 'today' as {end_time} and everything else relative.
+                            It is okay to use the internet to help answer questions about news, people, and events.
                             {input_text}.
                             """
             print(f"{len(input_prompt)} char input: {input_prompt}")
@@ -411,13 +429,16 @@ if selected_tab == tabs[4]:
         # time.sleep(30)
         print(f"output: {output}")
         # store the output 
-        st.session_state.past.append(input_text)
-        st.session_state.generated.append(output)
+        st.session_state['past'].append(input_text)
+        st.session_state['generated'].append(output)
         st.experimental_rerun()
 
     if reset_chat:
-        asyncio.run(reset_bing())
-        st.session_state['generated'] = []
+        with st.spinner('🧹Starting Clean...'):
+            asyncio.run(reset_bing())
+            st.session_state['generated'] = []
+            st.session_state['past'] = []
+            st.experimental_rerun()
 
 
 
