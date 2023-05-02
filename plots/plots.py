@@ -237,5 +237,13 @@ def scatter_plot(df):
         opacity=0.2,
         fillcolor="red",
         line_color="red",
+        # text = "High Risk Zone"
     )
+    fig.add_trace(go.Scatter(
+        x=[3],
+        y=[1.5],
+        text=["High Risk Zone"],
+        mode="text",
+    ))
+
     return fig

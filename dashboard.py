@@ -236,7 +236,16 @@ if selected_tab == tabs[0]:
     #                                                 line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
     #                                                 add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
     #                         use_container_width=True)
+    
     with st.expander(f'**Price Fall Risk and Factors ({period})**', expanded=True):
+        ## normalizing data
+        logits_df["price_contribution"] = logits_df["price_contribution"]
+        logits_df["news_contribution"] = (logits_df["news_contribution"] - min(logits_df["news_contribution"]))
+        logits_df["social_media_contribution"] = logits_df["social_media_contribution"]- min(logits_df["social_media_contribution"])
+        logits_df["total"] = (logits_df["price_contribution"]+logits_df["news_contribution"]+logits_df["social_media_contribution"])
+        logits_df["price_contribution"] = (logits_df["price_contribution"]/logits_df["total"])*logits_df["prediction_logit"]
+        logits_df["news_contribution"] = ((logits_df["news_contribution"])/logits_df["total"])*logits_df["prediction_logit"]
+        logits_df["social_media_contribution"] = (logits_df["social_media_contribution"]/logits_df["total"])*logits_df["prediction_logit"]
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
                                                                    line_name1='Price Fall Probability', line_name2=['Price Contribution to Risk', 'News Contribution to Risk', 'Social Media Contribution to Risk'], 
@@ -255,22 +264,22 @@ if selected_tab == tabs[0]:
 
 # with tab_social:
 if selected_tab == tabs[1]:
-    with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
-        st.markdown("""
-        * Twitter Sentiment Trend
-        * Top Tweets (By high reach tweets that are significantly polarized)
-        * Influencer Tweets
-        * Named Entity Word Cloud
-        * Hashtag Word Cloud
-        """)
+    # with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
+    #     st.markdown("""
+    #     * Twitter Sentiment Trend
+    #     * Top Tweets (By high reach tweets that are significantly polarized)
+    #     * Influencer Tweets
+    #     * Named Entity Word Cloud
+    #     * Hashtag Word Cloud
+    #     """)
 
     main_cols = st.columns([3,1])
     with main_cols[0]:
-        with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
-            st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
+        # with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
+        #     st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-        with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
-            st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
+        # with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
+        #     st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
         with st.expander(f"**Hashtags Word Cloud**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
@@ -286,10 +295,11 @@ if selected_tab == tabs[1]:
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment"), use_container_width=True)
 
-        with st.expander(f"**Sentiment**", expanded=True):
+        with st.expander(f"**Viral Tracker**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-            st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"), use_container_width=True)
+            st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"
+            , line_name1 = "Reach", line_name2 = "Tweet Count"), use_container_width=True)
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
             order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
