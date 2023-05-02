@@ -104,7 +104,7 @@ def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_colo
         layout_margin_top=10
     fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
         x=0,
-        y=1.1,))
+        y=1.2), legend_orientation="h")
     fig['data'][0]['showlegend'] = True
     return fig
 
@@ -124,7 +124,7 @@ def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, 
         layout_margin_top=10
     fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
         x=0,
-        y=1.2,))
+        y=1.2), legend_orientation="h")
     
     fig['data'][0]['showlegend'] = True
     return fig
@@ -145,7 +145,7 @@ def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, l
         layout_margin_top=10
     fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
         x=0,
-        y=1.2,))
+        y=1.2), legend_orientation="h")
     # fig.update_layout(yaxis2 = dict(range=[0, 8000]))
     fig['data'][0]['showlegend'] = True
     return fig
@@ -167,7 +167,7 @@ def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=No
     fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300)
     fig.update_layout(yaxis2 = dict(range=[0, df[column_y2].max()]), legend=dict(
         x=0,
-        y=1.2,))
+        y=1.2), legend_orientation="h")
     fig['data'][0]['showlegend'] = True
     return fig
 

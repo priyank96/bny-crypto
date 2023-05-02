@@ -59,6 +59,9 @@ st.markdown(f""" <style>
         margin-right: auto;
         width: 100%;
     }}
+    # div[data-testid="stMarkdownContainer"] p {{
+    #     font-size: 1.2em; /* Increase font size */
+    # }}
        </style> """, unsafe_allow_html=True)
 
 # HydraLit Info cards can apply customisation to almost all the properties of the card, including the progress bar
@@ -233,7 +236,7 @@ if selected_tab == tabs[0]:
     #                                                 line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
     #                                                 add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
     #                         use_container_width=True)
-    with st.expander(f'Price Fall Risk and Factors ({period})', expanded=True):
+    with st.expander(f'**Price Fall Risk and Factors ({period})**', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
                                                                    line_name1='Price Fall Probability', line_name2=['Price Contribution to Risk', 'News Contribution to Risk', 'Social Media Contribution to Risk'], 
@@ -241,7 +244,7 @@ if selected_tab == tabs[0]:
                                                                    add_hline=True, hline_value=price_fall_threshold, hline_color='red', hline_annotation_text=f'High Risk Threshold = {price_fall_threshold}%')
                         ,use_container_width=True)
 
-    with st .expander(f'Price and Volume ({period}) Shared', expanded=True):
+    with st .expander(f'**Price and Volume ({period}) Shared**', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
                                                     line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
                             use_container_width=True)
@@ -252,7 +255,7 @@ if selected_tab == tabs[0]:
 
 # with tab_social:
 if selected_tab == tabs[1]:
-    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+    with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
         st.markdown("""
         * Twitter Sentiment Trend
         * Top Tweets (By high reach tweets that are significantly polarized)
@@ -260,31 +263,38 @@ if selected_tab == tabs[1]:
         * Named Entity Word Cloud
         * Hashtag Word Cloud
         """)
-    with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
-        st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-    with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
-        st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
+    main_cols = st.columns([3,1])
+    with main_cols[0]:
+        with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
+            st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-    with st.expander(f"Hashtags Word Cloud", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
+        with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
+            st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-    with st.expander(f"Tweet Embeddings", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind]), use_container_width=True)
+        with st.expander(f"**Hashtags Word Cloud**", expanded=True):
+            plot_time = pd.to_datetime(end_time, utc=True)
+            st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
 
-    with st.expander(f"Sentiment", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment"), use_container_width=True)
+        with st.expander(f"**Tweet Embeddings**", expanded=True):
+            plot_time = pd.to_datetime(end_time, utc=True)
+            ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+            st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind]), use_container_width=True)
 
-    with st.expander(f"Sentiment", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"), use_container_width=True)
-        
+        with st.expander(f"**Sentiment**", expanded=True):
+            plot_time = pd.to_datetime(end_time, utc=True)
+            ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+            st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment"), use_container_width=True)
+
+        with st.expander(f"**Sentiment**", expanded=True):
+            plot_time = pd.to_datetime(end_time, utc=True)
+            ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+            st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"), use_container_width=True)
+    with main_cols[1]:
+        with st.expander(f"**Top Tweets**", expanded=True):
+            order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
+            st.write('TODO')
+
 
 
 # with tab_news:
@@ -298,7 +308,7 @@ if selected_tab == tabs[2]:
         * Add price and FMDD to graph lines overlaid on news sentiment
         """)
 
-    with st.expander(f"News Sentiment Trend ({period})", expanded=True):
+    with st.expander(f"**News Sentiment Trend ({period})**", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
         if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
@@ -306,7 +316,7 @@ if selected_tab == tabs[2]:
             st.plotly_chart(plots.line_plot_single(news_sentiment_df, column_y='sentiment', line_name='News Sentiment Trend'),
                             use_container_width=True)
 
-    with st.expander(f"News Articles", expanded=True):
+    with st.expander(f"**News Articles**", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
         order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
         if order == 'Latest':
@@ -360,7 +370,7 @@ if selected_tab == tabs[3]:
 
             
 
-        with st.expander(f'{selected_value_name} history ({period}) Shared', expanded=True):
+        with st.expander(f'**{selected_value_name} history ({period}) Shared**', expanded=True):
             if selected_value == 'volume':
                 st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2=selected_value, line_fill1=None, line_fill2='tozeroy',
                                                             line_name1="Price", line_name2=selected_value_name, line_color1=highlight_color, line_color2='grey'),
@@ -503,7 +513,7 @@ if selected_tab == tabs[5]:
 
     with cols[0]:
         if asset == "BTC":  # Show BTC Fear and Greed Index
-            with st.expander(f"Fear & Greed Index", expanded=True):
+            with st.expander(f"**Fear & Greed Index**", expanded=True):
                 st.image(
                     f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
                     use_column_width=True)
