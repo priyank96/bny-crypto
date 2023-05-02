@@ -77,7 +77,7 @@ if 'ti_selected_values' not in st.session_state: # Default values
 
 with st.sidebar:
     # st.image("images/bnym_logo.png", width=200, )
-    st.image("images/crisys_bnym_logo.png", width=200)
+    st.image("images/crisys_logo.png", width=200)
     st.title("Dashboard Configuration")
     
     asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
@@ -290,12 +290,12 @@ if selected_tab == tabs[1]:
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind]), use_container_width=True)
 
-        with st.expander(f"**Sentiment**", expanded=True):
+        with st.expander(f"**Average Tweet Sentiment Trend**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment"), use_container_width=True)
 
-        with st.expander(f"**Viral Tracker**", expanded=True):
+        with st.expander(f"**Count of Tweets and Reach of Tweets (based on Twitter Algo)**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"
