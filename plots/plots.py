@@ -93,7 +93,7 @@ def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_colo
         x = df[column_x]
     fig.add_trace(go.Line(x=x, y=df[column_y], fill=fill, name=line_name, marker=dict(color=line_color)))
     if add_hline:
-        fig.add_hline(y=0.03, line_width=1, line_dash="longdash", line_color="red", # dash styles: ['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
+        fig.add_hline(y=hline_value, line_width=1, line_dash="longdash", line_color=hline_color, # dash styles: ['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
             annotation_text=hline_annotation_text, 
             annotation_position=hline_annotation_position,
             annotation_font_color=hline_color) 
@@ -171,7 +171,39 @@ def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=No
     fig['data'][0]['showlegend'] = True
     return fig
 
+def line_plot_double_shared_stacked_bars(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None,
+                                         add_hline=False, hline_value=0.03, hline_color='red', hline_annotation_text='', hline_annotation_position='top left'):
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
+    if column_x is None:
+        x = df.index
+    else:
+        x = df[column_x]
 
+    fig.add_trace(go.Line(x=x, y=df[column_y1], fill=line_fill1, name=line_name1, marker=dict(color=line_color1)), secondary_y=False)
+    if add_hline:
+        fig.add_trace(go.Line(x=x, y=[hline_value]*len(x), name=hline_annotation_text, marker=dict(color=hline_color), line_dash="dash"), secondary_y=False)
+    for i, (col_name, line_name, line_color)  in enumerate(zip(column_y2, line_name2, line_color2)):
+        fig.add_trace(go.Bar(x=x, y=df[col_name], name=line_name, marker=dict(color=line_color, opacity=0.4)), secondary_y=True)
+
+    # if add_hline:
+    #     fig.add_hline(y=hline_value, line_width=1, line_dash="longdash", line_color=hline_color, # dash styles: ['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
+    #         annotation_text=hline_annotation_text, 
+    #         annotation_position=hline_annotation_position,
+    #         annotation_font_color=hline_color)
+        
+    if title is not None:
+        fig.update_layout(title_text=title)
+        layout_margin_top=30
+    else:
+        layout_margin_top=10
+    fig.update_layout(barmode='relative', margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300)
+    fig.update_layout(yaxis2 = dict(range=[0, df[column_y2].abs().max()]), legend=dict(
+        x=0,
+        # y=1+(0.2*len(column_y2)),))
+        y=1.2), legend_orientation="h")
+    fig['data'][0]['showlegend'] = True
+    return fig
 
 def hashtag_word_cloud(hashtags):
     text = ast.literal_eval(hashtags)

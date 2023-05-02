@@ -136,18 +136,22 @@ price_data_df = pd.read_csv("new_values.csv")
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
 news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
 article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
-#####/content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
-twitter_dash_data = pd.read_csv("twitter_dash_data.csv")
+twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
 twitter_dash_data["timestamp"] = pd.to_datetime(twitter_dash_data["timestamp"])
-
+logits_df = pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
+logits_df = logits_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
+logits_df['prediction_logit'] = logits_df['prediction_logit'].apply(lambda x: round(x*100,1))
 
 # Process Notifications
-fmdd_threshold = 0.03
+# fmdd_threshold = 0.03
+price_fall_threshold = 75 # In percent
 check_hours = 6
 
 if 'notifications' not in st.session_state:
-    if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
-        st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than {fmdd_threshold*100}% in the last {check_hours} hours"]
+    # if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
+    #     st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than {fmdd_threshold*100}% in the last {check_hours} hours"]
+    if [True for price_fall_value in logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] if price_fall_value > price_fall_threshold]:
+        st.session_state['notifications'] = [f"Risk of {asset} price fall was greater than {price_fall_threshold}% in the last {check_hours} hours"]
 if 'notifications' in st.session_state:
     if st.session_state['notifications'] is not False:
         # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
@@ -196,11 +200,19 @@ selected_tab = st.session_state['selected_tab'] if 'selected_tab' in st.session_
 if selected_tab == tabs[0]:
     
     # FMDD Numbers
-    fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
-    if fmdd_values[-2] == 0:
-        fmdd_delta = 100
+    # fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
+    # if fmdd_values[-2] == 0:
+    #     fmdd_delta = 100
+    # else:
+    #     fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/fmdd_values[-2],1)
+
+    # Risk Probability Numbers
+    price_fall_values = logits_df['prediction_logit'].values
+    if price_fall_values[-2] == 0:
+        price_fall_delta = 100
     else:
-        fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/fmdd_values[-2],1)
+        price_fall_delta = round(100*(price_fall_values[-1]-price_fall_values[-2])/price_fall_values[-2],1)
+
     # Price Numbers
     price_values = [round(x,3) for x in price_data_df['close'].values]
     price_delta = round(100*(price_values[-1]-price_values[-2])/price_values[-2],1)
@@ -210,18 +222,26 @@ if selected_tab == tabs[0]:
 
     cols = st.columns(3)
 
-    cols[0].metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
+    # cols[0].metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
+    cols[0].metric(label="Price Fall Risk", value=f'{price_fall_values[-1]}%', delta=f"{price_fall_delta}% in {time_interval}", delta_color="off" if price_fall_delta == 0 else "inverse", help=f'Probability of Price to fall in the next 6 hours')
     cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
     cols[2].metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
     cols = st.columns(2)
-    with cols[0].expander(f'Maximum Draw Down ({period})', expanded=True):
-        st.plotly_chart(plots.line_plot_single(price_data_df, column_x = 'timestamp', column_y='Forward MDD', 
-                                                    line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
-                                                    add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
-                            use_container_width=True)
+    # with cols[0].expander(f'Maximum Draw Down ({period})', expanded=True):
+    #     st.plotly_chart(plots.line_plot_single(price_data_df, column_x = 'timestamp', column_y='Forward MDD', 
+    #                                                 line_name="Maximum Draw Down", line_color=highlight_color, fill='tozeroy',
+    #                                                 add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
+    #                         use_container_width=True)
+    with st.expander(f'Price Fall Risk and Factors ({period})', expanded=True):
+        st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
+                                                                   column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
+                                                                   line_name1='Price Fall Probability', line_name2=['Price Contribution to Risk', 'News Contribution to Risk', 'Social Media Contribution to Risk'], 
+                                                                   line_color1='grey', line_color2=[highlight_color,'purple','blue'], title='',
+                                                                   add_hline=True, hline_value=price_fall_threshold, hline_color='red', hline_annotation_text=f'High Risk Threshold = {price_fall_threshold}%')
+                        ,use_container_width=True)
 
-    with cols[1] .expander(f'Price and Volume ({period}) Shared', expanded=True):
+    with st .expander(f'Price and Volume ({period}) Shared', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
                                                     line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
                             use_container_width=True)
@@ -235,10 +255,10 @@ if selected_tab == tabs[1]:
     with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
         st.markdown("""
         * Twitter Sentiment Trend
-        * Trending Topics
-        * Mentions
-        * Top Tweets
-        * Wordcloud
+        * Top Tweets (By high reach tweets that are significantly polarized)
+        * Influencer Tweets
+        * Named Entity Word Cloud
+        * Hashtag Word Cloud
         """)
     with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
         st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
