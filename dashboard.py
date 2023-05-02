@@ -147,14 +147,14 @@ logits_df['prediction_logit'] = logits_df['prediction_logit'].apply(lambda x: ro
 
 # Process Notifications
 # fmdd_threshold = 0.03
-price_fall_threshold = 75 # In percent
+price_fall_threshold = 50 # In percent
 check_hours = 6
 
 if 'notifications' not in st.session_state:
     # if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
     #     st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than {fmdd_threshold*100}% in the last {check_hours} hours"]
     if [True for price_fall_value in logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] if price_fall_value > price_fall_threshold]:
-        st.session_state['notifications'] = [f"Risk of {asset} price fall was greater than {price_fall_threshold}% in the last {check_hours} hours"]
+        st.session_state['notifications'] = [f" The Predicted Risk of {asset} price fall was greater than {price_fall_threshold}% for the next {check_hours} hours"]
 if 'notifications' in st.session_state:
     if st.session_state['notifications'] is not False:
         # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
@@ -293,7 +293,8 @@ if selected_tab == tabs[1]:
         with st.expander(f"**Sentiment**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-            st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment"), use_container_width=True)
+            st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment",
+                                                    line_name="average user sentiment"), use_container_width=True)
 
         with st.expander(f"**Viral Tracker**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)

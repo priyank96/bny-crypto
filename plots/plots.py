@@ -228,7 +228,7 @@ def word_cloud_gen(text):
 def scatter_plot(df):
     fig = px.scatter(df, x='embed_PCA_1', y='embed_PCA_2', opacity = 0.1)
 
-    fig.add_trace(go.Scatter(x=[df.iloc[-1]["embed_PCA_1"]], y=[df.iloc[-1]["embed_PCA_2"]], opacity = 1,mode='markers', marker=dict(size=20, color='black')))
+    fig.add_trace(go.Scatter(x=[df.iloc[-1]["embed_PCA_1"]], y=[df.iloc[-1]["embed_PCA_2"]], opacity = 1,mode='markers', marker=dict(size=20, color='black'), name = "Current Twitter Embedding"))
     # Add shapes
     fig.add_shape(type="circle",
         xref="x", yref="y",
@@ -244,6 +244,7 @@ def scatter_plot(df):
         y=[1.5],
         text=["High Risk Zone"],
         mode="text",
+        showlegend = False
     ))
 
     return fig
