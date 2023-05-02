@@ -136,6 +136,9 @@ price_data_df = pd.read_csv("new_values.csv")
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
 news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
 article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
+#####/content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
+twitter_dash_data = pd.read_csv("twitter_dash_data.csv")
+twitter_dash_data["timestamp"] = pd.to_datetime(twitter_dash_data["timestamp"])
 
 
 # Process Notifications
@@ -239,6 +242,30 @@ if selected_tab == tabs[1]:
         """)
     with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
         st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
+
+    with st.expander(f"Mentions #crypto #btc (Placeholder Data)", expanded=True):
+        st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
+
+    with st.expander(f"Hashtags Word Cloud", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
+
+    with st.expander(f"Tweet Embeddings", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind]), use_container_width=True)
+
+    with st.expander(f"Sentiment", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+        st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment"), use_container_width=True)
+
+    with st.expander(f"Sentiment", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"), use_container_width=True)
+        
+
 
 # with tab_news:
 if selected_tab == tabs[2]:

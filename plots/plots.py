@@ -1,6 +1,11 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import random
+from wordcloud import WordCloud
+import re
+import ast
+import numpy as np
+import plotly.express as px
 
 
 def prediction_horizon_bar_plot(postitive_chance=0.2, negative_chance=0.5, title='Risk Prediction'):
@@ -164,4 +169,41 @@ def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=No
         x=0,
         y=1.2,))
     fig['data'][0]['showlegend'] = True
+    return fig
+
+
+
+def hashtag_word_cloud(hashtags):
+    text = ast.literal_eval(hashtags)
+    text = ' '.join(text)
+    return word_cloud_gen(text)
+
+def body_word_cloud(body):
+  clean_text = re.sub(r'[^\x00-\x7F]+', '', body)
+  return word_cloud_gen(clean_text)
+
+def word_cloud_gen(text):
+  # Generate a word cloud image
+  wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+  image = np.array(wordcloud.to_image())
+
+  # Create a Plotly chart to display the word cloud image
+  fig = go.Figure(go.Image(z=image))
+  fig.update_layout(width=800, height=400, margin=dict(l=0, r=0, t=0, b=0))
+  fig.update_layout(xaxis_visible=False, yaxis_visible=False)
+  return fig
+
+def scatter_plot(df):
+    fig = px.scatter(df, x='embed_PCA_1', y='embed_PCA_2', opacity = 0.1)
+
+    fig.add_trace(go.Scatter(x=[df.iloc[-1]["embed_PCA_1"]], y=[df.iloc[-1]["embed_PCA_2"]], opacity = 1,mode='markers', marker=dict(size=20, color='black')))
+    # Add shapes
+    fig.add_shape(type="circle",
+        xref="x", yref="y",
+        x0=2.5, y0=-0.5,
+        x1=3.5, y1=1,
+        opacity=0.2,
+        fillcolor="red",
+        line_color="red",
+    )
     return fig
