@@ -7,8 +7,8 @@ from risk_measures import ZeroLagExpMovingAvg
 from util import plot, plot_grid
 
 
-def read_events(currency: str, kind: str):
-    df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/' + currency + '_' + kind + '.csv')
+def read_events(asset: str, kind: str):
+    df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/' + asset + '_' + kind + '.csv')
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.set_index('timestamp')
     return df
@@ -26,13 +26,13 @@ def read_tweet_counts(start_time, end_time):
     return df.loc[mask]
 
 
-def read_news_events(currency, start_time, end_time):
-    if currency == 'BTC':
+def read_news_events(asset, start_time, end_time):
+    if asset == 'BTC':
         df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/BTC_coindesk_articles.csv', header=0,
                          sep='\t')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df = df.sort_values('timestamp', ascending=True)
-    elif currency == 'BTC_BERTopic':
+    elif asset == 'BTC_BERTopic':
         df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/article_class_probabilites.csv', header=0,
                          sep=',')
         df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -51,7 +51,7 @@ class DashboardNewsData:
         -1: "Noise",
         0: "Companies",
         1: "Mining",
-        2: "Adoption",  # Use of bitcoin as a currency
+        2: "Adoption",  # Use of bitcoin as a asset
         3: "Price Behavior",
         4: "Coinbase",
         5: "Technology",
@@ -80,8 +80,8 @@ class DashboardNewsData:
     }
 
     @staticmethod
-    def dashboard_news_articles_to_show(currency, start_time, end_time):
-        df = DashboardNewsData._load_news_df(currency, start_time, end_time)
+    def dashboard_news_articles_to_show(asset, start_time, end_time):
+        df = DashboardNewsData._load_news_df(asset, start_time, end_time)
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         if len(df) == 0:
             df.index = df['timestamp']
@@ -102,8 +102,8 @@ class DashboardNewsData:
         return df
 
     @staticmethod
-    def dashboard_news_aggregated_sentiment(currency, start_time, end_time, freq='30min'):
-        df = DashboardNewsData._load_news_df(currency, start_time, end_time)
+    def dashboard_news_aggregated_sentiment(asset, start_time, end_time, freq='30min'):
+        df = DashboardNewsData._load_news_df(asset, start_time, end_time)
         if len(df) == 0:
             df['sentiment'] = []
             return df
@@ -127,21 +127,19 @@ class DashboardNewsData:
         return final_df
 
     @staticmethod
-    def _load_news_df(currency, start_time, end_time):
-        if isinstance(start_time, datetime.datetime):
-            start_time = start_time.strftime('%Y-%m-%dT%H:%M:%S%z')
-        if isinstance(end_time, datetime.datetime):
-            end_time = end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+    def _load_news_df(asset, start_time, end_time):
 
-        if currency == 'BTC':
+        if asset == 'BTC':
             df = pd.read_csv(os.path.abspath(os.path.dirname(__file__)) + '/data/article_topic_and_sentiment.csv',
                              header=0,
                              sep=',')
             df['class_labels'] = df['class_labels'].apply(lambda x: [int(val) for val in x[1:-1].split(',')])
             df['sentiment_logits'] = df['sentiment_logits'].apply(lambda x: [float(val) for val in x[1:-1].split(',')])
+        else:
+            # Raise error
+            raise ValueError(f'Asset {asset}not supported')
 
-        mask = (df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)
-        return df.loc[mask]
+        return df.query(f'"{str(start_time)}" <= timestamp <= "{str(end_time)}"')
 
 
 if __name__ == '__main__':
