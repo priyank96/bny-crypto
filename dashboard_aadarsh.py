@@ -296,7 +296,7 @@ if selected_tab == tabs[1]:
             st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment",
                                                     line_name="average user sentiment"), use_container_width=True)
 
-        with st.expander(f"**Count of Tweets and Reach of Tweets (based on Twitter Algo)**", expanded=True):
+        with st.expander(f"**Viral Tracker**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"

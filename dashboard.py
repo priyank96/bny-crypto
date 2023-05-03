@@ -143,7 +143,7 @@ twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /conte
 twitter_dash_data["timestamp"] = pd.to_datetime(twitter_dash_data["timestamp"])
 logits_df = pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
-logits_df['prediction_logit'] = logits_df['prediction_logit'].apply(lambda x: round(x*100,1))
+
 
 # Process Notifications
 # fmdd_threshold = 0.03
@@ -238,14 +238,7 @@ if selected_tab == tabs[0]:
     #                         use_container_width=True)
     
     with st.expander(f'**Price Fall Risk and Factors ({period})**', expanded=True):
-        ## normalizing data
-        logits_df["price_contribution"] = logits_df["price_contribution"]
-        logits_df["news_contribution"] = (logits_df["news_contribution"] - min(logits_df["news_contribution"]))
-        logits_df["social_media_contribution"] = logits_df["social_media_contribution"]- min(logits_df["social_media_contribution"])
-        logits_df["total"] = (logits_df["price_contribution"]+logits_df["news_contribution"]+logits_df["social_media_contribution"])
-        logits_df["price_contribution"] = (logits_df["price_contribution"]/logits_df["total"])*logits_df["prediction_logit"]
-        logits_df["news_contribution"] = ((logits_df["news_contribution"])/logits_df["total"])*logits_df["prediction_logit"]
-        logits_df["social_media_contribution"] = (logits_df["social_media_contribution"]/logits_df["total"])*logits_df["prediction_logit"]
+        
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
                                                                    line_name1='Price Fall Probability', line_name2=['Price Contribution to Risk', 'News Contribution to Risk', 'Social Media Contribution to Risk'], 
@@ -285,7 +278,7 @@ if selected_tab == tabs[1]:
             plot_time = pd.to_datetime(end_time, utc=True)
             st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
 
-        with st.expander(f"**Tweet Embeddings**", expanded=True):
+        with st.expander(f"**Chatter Danger Zone**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind]), use_container_width=True)
@@ -296,7 +289,7 @@ if selected_tab == tabs[1]:
             st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment",
                                                     line_name="average user sentiment"), use_container_width=True)
 
-        with st.expander(f"**Count of Tweets and Reach of Tweets (based on Twitter Algo)**", expanded=True):
+        with st.expander(f"**Viral Tweet Tracker**", expanded=True):
             plot_time = pd.to_datetime(end_time, utc=True)
             ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
             st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"
