@@ -281,7 +281,7 @@ if selected_tab == tabs[0]:
     #                                                 add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
     #                         use_container_width=True)
     
-    with st.expander(f'**Price Fall Risk and Factors ({period})**', expanded=True):
+    with cols[0].expander(f'**Price Fall Risk and Factors ({period})**', expanded=True):
         
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
@@ -290,7 +290,7 @@ if selected_tab == tabs[0]:
                                                                    add_hline=True, hline_value=price_fall_threshold, hline_color='red', hline_annotation_text=f'High Risk Threshold = {price_fall_threshold}%')
                         ,use_container_width=True)
 
-    with st .expander(f'**Price and Volume ({period}) Shared**', expanded=True):
+    with cols[1].expander(f'**Price and Volume ({period}) Shared**', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
                                                     line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
                             use_container_width=True)
