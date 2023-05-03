@@ -21,6 +21,8 @@ import asyncio
 from EdgeGPT import Chatbot, ConversationStyle
 import json
 
+development_mode = False
+
 # Page config. Other configs are loaded from .streamlit/config.toml
 st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
                    page_icon="images/crisys_logo.png", layout="wide", initial_sidebar_state="auto", menu_items=None)
@@ -64,6 +66,26 @@ st.markdown(f""" <style>
     # }}
        </style> """, unsafe_allow_html=True)
 
+# st.metric CSS style modification
+st.markdown("""
+    <style>
+    div[data-testid="metric-container"]{
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: 5% 5% 5% 10%;
+    border-radius: 5px;
+    overflow-wrap: break-word;
+    }
+
+    /* breakline for metric text         */
+    div[data-testid="metric-container"] > label[data-testid="stMetricLabel"] > div {
+    overflow-wrap: break-word;
+    white-space: break-spaces;
+    }
+    </style>
+    """
+    , unsafe_allow_html=True)
+
 # HydraLit Info cards can apply customisation to almost all the properties of the card, including the progress bar
 theme_good = {'bgcolor': '#EFF8F7','title_color': 'green','content_color': 'green','icon_color': 'green', 'icon': 'fa fa-check-circle'}
 theme_neutral = {'bgcolor': '#f9f9f9','title_color': 'orange','content_color': 'orange','icon_color': 'orange', 'icon': 'fa fa-question-circle'}
@@ -102,19 +124,26 @@ with st.sidebar:
         # end_time = datetime.datetime.now() - pd.to_timedelta(period)
         st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta(f"{button_time}h")
         st.session_state['button_rerun'] = True
+        if 'notifications' in st.session_state:
+            del st.session_state['notifications']
         st.experimental_rerun()
     if cols[1].button(f"{button_time} hours ▶"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(period)
         st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta(f"{button_time}h")
         st.session_state['button_rerun'] = True
+        if 'notifications' in st.session_state:
+            del st.session_state['notifications']
         st.experimental_rerun()
 
+# Only take the crypto symbol
 asset = asset[:3]
 
 
 # Main Body
-highlight_color = '#e3a72f'
+highlight_color = '#e3a72f' # BNYM yellow
+shade_color = '#072632' # BNYM blue
+
 # st.markdown(f"""
 # <style>
 #     div.block-container{{
@@ -152,11 +181,14 @@ logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_l
 price_fall_threshold = 50 # In percent
 check_hours = 6
 
-if 'notifications' not in st.session_state:
+if 'notifications' not in st.session_state or ('notification_update_time' in st.session_state and st.session_state['notification_update_time'] != st.session_state['load_time']):
     # if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
     #     st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than {fmdd_threshold*100}% in the last {check_hours} hours"]
-    if [True for price_fall_value in logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] if price_fall_value > price_fall_threshold]:
-        st.session_state['notifications'] = [f" The Predicted Risk of {asset} price fall was greater than {price_fall_threshold}% for the next {check_hours} hours"]
+    latest_timestamp = logits_df.iloc[-(check_hours*2+1):]['timestamp'][logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] > price_fall_threshold].max()
+    threshold_check_list = [True for price_fall_value in logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] if price_fall_value > price_fall_threshold]
+    if True in threshold_check_list:
+        st.session_state['notifications'] = [f"High likelihood of {asset} price to fall signifiantly by {datetime.datetime.strptime(latest_timestamp, '%Y-%m-%d %H:%M:%S+00:00')+datetime.timedelta(hours=6)}"]
+        st.session_state['notification_update_time'] = st.session_state['load_time']
 if 'notifications' in st.session_state:
     if st.session_state['notifications'] is not False:
         # hc.info_card(title="Alert Notification Body", content="TODO", theme_override=theme_alert)
@@ -172,22 +204,22 @@ if 'notifications' in st.session_state:
             st.session_state['notifications'] = False
             st.session_state['button_rerun'] = True
             st.experimental_rerun()
-    elif st.session_state['notifications'] is False:
-        cols = st.columns([5, 1])
-        show_notification = cols[1].button("🚨 Show Alert")
-        if show_notification:
-            del st.session_state['notifications']
-            st.session_state['button_rerun'] = True
-            st.experimental_rerun()
+    # elif st.session_state['notifications'] is False:
+    #     cols = st.columns([5, 1])
+    #     show_notification = cols[1].button("🚨 Show Alert")
+    #     if show_notification:
+    #         del st.session_state['notifications']
+    #         st.session_state['button_rerun'] = True
+    #         st.experimental_rerun()
 
 
 
     
 
 # tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Tech Indicators", "💬 CrisysGPT Chat", "🤔 More?"])
-tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CrisysGPT Chat', 'More?', 'People']
+tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CrisysGPT Chat', 'About Us']
 selected_tab = option_menu(None, tabs,
-                           icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'question-circle-fill','people-fill'], # Icons from https://icons.getbootstrap.com/
+                           icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'people-fill'], # Icons from https://icons.getbootstrap.com/
                            menu_icon="cast", default_index=0, orientation="horizontal")
 if 'selected_tab' not in st.session_state:
     st.session_state['selected_tab'] = selected_tab
@@ -227,6 +259,8 @@ if selected_tab == tabs[0]:
 
     cols = st.columns(3)
 
+    
+
     # cols[0].metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
     cols[0].metric(label="Confidence of Price Fall", value=f'{price_fall_values[-1]}%', delta=f"{price_fall_delta}% in {time_interval}", delta_color="off" if price_fall_delta == 0 else "inverse", help=f'Confidence of price to fall by more than 3.8% in the next 6 hours')
     cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
@@ -259,14 +293,15 @@ if selected_tab == tabs[0]:
 
 # with tab_social:
 if selected_tab == tabs[1]:
-    # with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
-    #     st.markdown("""
-    #     * Twitter Sentiment Trend
-    #     * Top Tweets (By high reach tweets that are significantly polarized)
-    #     * Influencer Tweets
-    #     * Named Entity Word Cloud
-    #     * Hashtag Word Cloud
-    #     """)
+    if development_mode is True:
+        with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
+            st.markdown("""
+            * Twitter Sentiment Trend
+            * Top Tweets (By high reach tweets that are significantly polarized)
+            * Influencer Tweets
+            * Named Entity Word Cloud
+            * Hashtag Word Cloud
+            """)
 
     main_cols = st.columns([3,1])
 
@@ -301,13 +336,14 @@ if selected_tab == tabs[1]:
 # with tab_news:
 if selected_tab == tabs[2]:
 
-    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
-        st.markdown("""
-        * Update News Sentiment Trend to add meaning
-        * Show Press Releases
-        * News Named Entity Word Cloud
-        * Add price and FMDD to graph lines overlaid on news sentiment
-        """)
+    if development_mode is True:
+        with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+            st.markdown("""
+            * Update News Sentiment Trend to add meaning
+            * Show Press Releases
+            * News Named Entity Word Cloud
+            * Add price and FMDD to graph lines overlaid on news sentiment
+            """)
 
     with st.expander(f"**News Sentiment Trend ({period})**", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
@@ -352,10 +388,11 @@ if selected_tab == tabs[2]:
 
 # with tab_ti:
 if selected_tab == tabs[3]:
-    # with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
-    #     st.markdown("""
-    #     * Add Important Tech Indicators Graphs (RSI, MACD, etc.)
-    #     """)
+    if development_mode is True:
+        with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+            st.markdown("""
+            * Add Important Tech Indicators Graphs (RSI, MACD, etc.)
+            """)
 
     st.session_state['ti_selected_values'] = st.multiselect(
         label='Visualize Multiple Technical Indicators with Price and Volume',
@@ -388,12 +425,13 @@ if selected_tab == tabs[3]:
 
 # with tab_chat:
 if selected_tab == tabs[4]:
-    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
-        st.markdown("""
-        * Chatbot
-        * Summarize
-        * Ask questions
-        """)
+    if development_mode is True:
+        with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+            st.markdown("""
+            * Chatbot
+            * Summarize
+            * Ask questions
+            """)
     #Creating the chatbot interface
 
     # Storing the chat
@@ -501,22 +539,40 @@ if selected_tab == tabs[4]:
 
 
 # with tab4:
+# if selected_tab == tabs[5]:
+
+#     if development_mode is True:
+#         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+#             st.markdown("""
+#             * Trends from other data processing
+#             * API for other sources
+#             * Open to ideas
+#             """)
+
+#     cols = st.columns(3)
+
+#     with cols[0]:
+#         if asset == "BTC":  # Show BTC Fear and Greed Index
+#             with st.expander(f"**Fear & Greed Index**", expanded=True):
+#                 st.image(
+#                     f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
+#                     use_column_width=True)
+                
 if selected_tab == tabs[5]:
 
-    with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
-        st.markdown("""
-        * Trends from other data processing
-        * API for other sources
-        * Open to ideas
-        """)
+    if development_mode is True:
+        with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
+            st.markdown("""
+            * Student Attribution
+            """)
 
-    cols = st.columns(3)
+    st.write("Developed as part of the BNY Mellon sponsored capstone project at Carnegie Mellon University's MS in Artificial Intelligence and Innovation program in 2023.")
 
-    with cols[0]:
-        if asset == "BTC":  # Show BTC Fear and Greed Index
-            with st.expander(f"**Fear & Greed Index**", expanded=True):
-                st.image(
-                    f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
+    cols = st.columns(2)
+    with cols[0].expander(f"**CMU Student Team**", expanded=True):
+        st.image("images/BNYM_students.jpg",
                     use_column_width=True)
-                
-    
+
+    with cols[1].expander(f"**Project Mentors and CMU Faculty**", expanded=True):
+        st.image("images/BNYM_mentors.jpg",
+                    use_column_width=True)
