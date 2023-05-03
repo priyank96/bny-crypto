@@ -316,8 +316,8 @@ if selected_tab == tabs[1]:
     with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
         plot_time = pd.to_datetime(end_time, utc=True)
         ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y="sentiment",
-                                                line_name="User sentiment"), use_container_width=True)
+        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y1="sentiment", y2_value=0,
+                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red'), use_container_width=True)
         
     with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
         plot_time = pd.to_datetime(end_time, utc=True)

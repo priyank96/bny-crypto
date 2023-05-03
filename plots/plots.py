@@ -107,7 +107,7 @@ def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_colo
     fig['data'][0]['showlegend'] = True
     return fig
 
-def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, fill=None, title=None):
+def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, y2_value = 0, line_name1=None, line_name2=None, line_color1=None, line_color2=None, fill=None, title=None):
     # fig = go.Figure()
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
     if column_x is None:
@@ -115,7 +115,11 @@ def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, 
     else:
         x = df[column_x]
     fig.append_trace(go.Line(x=x, y=df[column_y1], fill=fill, name=line_name1, marker=dict(color=line_color1)), row=1, col=1)
-    fig.append_trace(go.Line(x=x, y=df[column_y2], fill=fill, name=line_name2, marker=dict(color=line_color2)), row=2, col=1)
+    if column_y2 is not None:
+        fig.append_trace(go.Line(x=x, y=df[column_y2], fill=fill, name=line_name2, marker=dict(color=line_color2)), row=2, col=1)
+    else:
+        # Make line with constant value y2_value
+        fig.append_trace(go.Line(x=x, y=[y2_value for i in range(len(x))], fill=fill, name=line_name2, marker=dict(color=line_color2)), row=2, col=1)
     if title is not None:
         fig.update_layout(title_text=title)
         layout_margin_top=30
@@ -128,7 +132,8 @@ def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, 
     fig['data'][0]['showlegend'] = True
     return fig
 
-def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None):
+def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, y2_value=0, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None):
+    
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
     if column_x is None:
@@ -136,7 +141,11 @@ def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, l
     else:
         x = df[column_x]
     fig.add_trace(go.Line(x=x, y=df[column_y1], fill=line_fill1, name=line_name1, marker=dict(color=line_color1)), secondary_y=False)
-    fig.add_trace(go.Line(x=x, y=df[column_y2], name=line_name2, marker=dict(color=line_color2, opacity=0.4)), secondary_y=True)
+    if column_y2 is not None:
+        fig.add_trace(go.Line(x=x, y=df[column_y2], name=line_name2, marker=dict(color=line_color2, opacity=0.4)), secondary_y=True)
+    else:
+        # Make line with constant value y2_value
+        fig.add_trace(go.Line(x=x, y=[y2_value for i in range(len(x))], name=line_name2, marker=dict(color=line_color2, opacity=0.4), line_dash="dash"), secondary_y=False)
     if title is not None:
         fig.update_layout(title_text=title)
         layout_margin_top=30
