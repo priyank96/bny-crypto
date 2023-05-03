@@ -176,7 +176,7 @@ price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num
 news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
 article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
 twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
-twitter_dash_data["timestamp"] = pd.to_datetime(twitter_dash_data["timestamp"])
+twitter_dash_data['timestamp'] = pd.to_datetime(twitter_dash_data['timestamp'])
 logits_df = pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
 tweet_df = pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
@@ -313,26 +313,22 @@ if selected_tab == tabs[1]:
 
     main_cols = st.columns([2,1])
 
+    plot_time = pd.to_datetime(end_time, utc=True)
+    ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
     with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y1="sentiment", y2_value=0,
-                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red'), use_container_width=True)
+        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="sentiment", y2_value=0,
+                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Logits'), use_container_width=True)
         
     with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
         st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
 
-    with main_cols[0].expander(f"**Chatter Danger Zone**", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind+1]), use_container_width=True)
+    with main_cols[0].expander(f"**Tweet Content Embedding Distance**", expanded=True):
+        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='grey',
+                                           xaxis_title="Primary PCA Axis", yaxis_title="Secondary PCA Axis"), use_container_width=True)
 
-    with main_cols[0].expander(f"**Count of Tweets and Reach of Tweets (based on Twitter Algo)**", expanded=True):
-        plot_time = pd.to_datetime(end_time, utc=True)
-        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y1="reach", column_y2="tweet_count",
-                                                    line_name1 = "Reach", line_name2 = "Tweet Count"), use_container_width=True)
+    with main_cols[0].expander(f"**Reach of Tweets (based on Twitter Algo) vs Number of Tweets**", expanded=True):
+        st.plotly_chart(plots.line_plot_double_shared_bars(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="reach", column_y2="tweet_count", line_fill1=None, line_fill2='tozeroy',
+                                                    line_name1 = 'Tweet Reach', line_name2 = 'Number of Tweet', line_color1=highlight_color, line_color2='grey'), use_container_width=True)
 
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
@@ -396,8 +392,8 @@ if selected_tab == tabs[2]:
         if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
         else:
-            st.plotly_chart(plots.line_plot_single(news_sentiment_df, column_y='sentiment', line_name='News Sentiment Trend'),
-                            use_container_width=True)
+            st.plotly_chart(plots.line_plot_double_shared(news_sentiment_df, column_y1="sentiment", y2_value=0,
+                                                    line_name1="News Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Logits'), use_container_width=True)
 
     with st.expander(f"**News Articles**", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
