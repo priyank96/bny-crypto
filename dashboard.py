@@ -4,15 +4,19 @@ import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
 import plotly.express as px  # interactive charts
 import datetime
+import random
+import markdown
+import requests
 
 import streamlit as st  # 🎈 data web app development
+import streamlit.components.v1 as components
 import hydralit_components as hc
 from streamlit_chat import message
 from streamlit_option_menu import option_menu
 import streamlit_helpers
 from plots import plots
-import random
-import markdown
+
+
 
 from event_data import DashboardNewsData # In event_data/api.py
 
@@ -165,6 +169,8 @@ if 'h' in period:
     num_lookback_points = (int(period.split('h')[0]) * 2) + 1 # 24h * 2 + 1
 elif 'd' in period:
     num_lookback_points = (int(period.split('d')[0]) * 24 * 2) + 1
+
+# Load Dataframes
 price_data_df = pd.read_csv("new_values.csv")
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
 news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
@@ -173,8 +179,10 @@ twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /conte
 twitter_dash_data["timestamp"] = pd.to_datetime(twitter_dash_data["timestamp"])
 logits_df = pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
-
-
+tweet_df = pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
+tweet_df = tweet_df.query(f'"{str(start_time)}" <= timestamp <= "{str(end_time)}+00:00"')
+# st.write(f"{str(start_time)} <= timestamp <= {str(end_time)}+00:00")
+# st.write(f"{tweet_df.iloc[-1:-30:-1]['timestamp']}")
 
 # Process Notifications
 # fmdd_threshold = 0.03
@@ -303,13 +311,13 @@ if selected_tab == tabs[1]:
             * Hashtag Word Cloud
             """)
 
-    main_cols = st.columns([3,1])
+    main_cols = st.columns([2,1])
 
-    with main_cols[0].expander(f"**Tweet Sentiment Trend ({period})**", expanded=True):
+    with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
         plot_time = pd.to_datetime(end_time, utc=True)
         ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
         st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y="sentiment",
-                                                line_name="average user sentiment"), use_container_width=True)
+                                                line_name="User sentiment"), use_container_width=True)
         
     with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
         plot_time = pd.to_datetime(end_time, utc=True)
@@ -328,8 +336,46 @@ if selected_tab == tabs[1]:
 
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
-            order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
-            st.write('TODO')
+            st.write(f"* 4 hour time delay between now and tweet render due to EST to UTC time difference")
+            order = st.selectbox('Sort By:', ['Latest', 'Highest Reach', 'Highest Per Follower Reach'], index=1)
+            if order == 'Latest':
+                tweet_df.sort_index(inplace=True, ascending=False)
+            elif order == 'Highest Reach':
+                # Sort by 'NORMALIZED_ENGAGEMENT' column
+                tweet_df.sort_values(by=['ENGAGEMENT'], inplace=True, ascending=False)
+            elif order == 'Highest Per Follower Reach':
+                tweet_df.sort_values(by=['NORMALIZED_ENGAGEMENT'], inplace=True, ascending=False)
+                # if order == 'Top Positive':
+                #     tweet_df = tweet_df[tweet_df['sentiment_logits'] == 'Positive']
+                # elif order == 'Top Negative':
+                #     tweet_df = tweet_df[tweet_df['sentiment_logits'] == 'Negative']
+                # elif order == 'Top Neutral':
+                #     tweet_df = tweet_df[tweet_df['sentiment_logits'] == 'Neutral']
+
+            load_tweets_count = 20
+                
+            for i, row in tweet_df.iloc[:load_tweets_count].iterrows():
+                
+                t = streamlit_helpers.Tweet(row['url']).component(height=350)
+                st.write('---')
+
+            cols = st.columns([2,1,2])
+            if cols[0].button(f"◀ {load_tweets_count} Tweets"):
+                # Refresh page with -6 hours delta
+                # end_time = datetime.datetime.now() - pd.to_timedelta(period)
+                st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta(f"{load_tweets_count}h")
+                st.session_state['button_rerun'] = True
+                if 'notifications' in st.session_state:
+                    del st.session_state['notifications']
+                st.experimental_rerun()
+            if cols[2].button(f"{load_tweets_count} Tweets ▶"):
+                # Refresh page with -6 hours delta
+                # end_time = datetime.datetime.now() - pd.to_timedelta(period)
+                st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta(f"{load_tweets_count}h")
+                st.session_state['button_rerun'] = True
+                if 'notifications' in st.session_state:
+                    del st.session_state['notifications']
+                st.experimental_rerun()
 
 
 
@@ -480,7 +526,7 @@ if selected_tab == tabs[4]:
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
             message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
 
-        st.components.v1.html(f"""
+        components.html(f"""
                                 <script>
                                     function scroll(dummy_var_to_force_repeat_execution){{
                                         var textAreas = parent.document.querySelectorAll('section.main');
@@ -570,9 +616,9 @@ if selected_tab == tabs[5]:
 
     cols = st.columns(2)
     with cols[0].expander(f"**CMU Student Team**", expanded=True):
-        st.image("images/BNYM_students.jpg",
+        st.image("images/BNYM_students.jpg", # Download from https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm
                     use_column_width=True)
 
     with cols[1].expander(f"**Project Mentors and CMU Faculty**", expanded=True):
-        st.image("images/BNYM_mentors.jpg",
+        st.image("images/BNYM_mentors.jpg", # Download from https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm
                     use_column_width=True)

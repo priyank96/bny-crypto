@@ -2,6 +2,8 @@ import datetime
 from datetime import timedelta
 import math
 import requests
+import streamlit.components.v1 as components
+from bs4 import BeautifulSoup
 
 hide_streamlit_style = """
             <style>
@@ -29,6 +31,26 @@ headers = {
 	"X-RapidAPI-Key": "3544cf43d4msh1ed76e82c2c2d91p11cb52jsnc07ced28aeca",
 	"X-RapidAPI-Host": "chatgpt-4-bing-ai-chat-api.p.rapidapi.com"
 }
+
+class Tweet(object):
+    def __init__(self, s, embed_str=False):
+        if not embed_str:
+            # Use Twitter's oEmbed API
+            # https://dev.twitter.com/web/embedded-tweets
+            api = "https://publish.twitter.com/oembed?url={}&hide_media=true&hide_thread=true&align=center&dnt=true".format(s)
+            response = requests.get(api)
+            # modify utc_offset
+            soup = BeautifulSoup(response.json()["html"], "html.parser")
+            utc_offset = datetime.datetime.now() - datetime.datetime.utcnow()
+            self.text = response.json()["html"]
+        else:
+            self.text = s
+
+    def _repr_html_(self):
+        return self.text
+
+    def component(self, height=600, scrolling=True):
+        return components.html(self.text, height=height, scrolling=scrolling)
 
 if __name__ == "__main__":
     print(f"Requesting: {payload['question']}")
