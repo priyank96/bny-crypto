@@ -195,7 +195,7 @@ if 'notifications' not in st.session_state or ('notification_update_time' in st.
     latest_timestamp = logits_df.iloc[-(check_hours*2+1):]['timestamp'][logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] > price_fall_threshold].max()
     threshold_check_list = [True for price_fall_value in logits_df.iloc[-(check_hours*2+1):]['prediction_logit'] if price_fall_value > price_fall_threshold]
     if True in threshold_check_list:
-        st.session_state['notifications'] = [f"High likelihood of {asset} price to fall signifiantly by {datetime.datetime.strptime(latest_timestamp, '%Y-%m-%d %H:%M:%S+00:00')+datetime.timedelta(hours=6)}"]
+        st.session_state['notifications'] = [f"High likelihood of {asset} price to fall signifiantly!"]# by {datetime.datetime.strptime(latest_timestamp, '%Y-%m-%d %H:%M:%S+00:00')+datetime.timedelta(hours=6)}"]
         st.session_state['notification_update_time'] = st.session_state['load_time']
 if 'notifications' in st.session_state:
     if st.session_state['notifications'] is not False:
@@ -547,13 +547,13 @@ if selected_tab == tabs[4]:
             lookback_interval = 6
             input_prompt = f"""
                             I want you to summarize what happened today and what will happen to {asset}.
-                            Do not use any information beyond {end_time}.
+                            Do not use any news or information beyond {end_time}.
                             Be brief and to the point.
                             {asset} price from {lookback_interval} hours ago to now in 30 minute increments: {list(price_data_df['close'].values[-(lookback_interval*2):])}
                             Latest News: {article_df['title'].values[-(lookback_interval*2):]}
                             Top Tweets: {None}
                             Consider 'today' as {end_time} and everything else relative.
-                            It is okay to use the internet to help answer questions about news, people, and events.
+                            It is okay to use the internet to help answer questions about news, people, and events but do not use any news or information beyond {end_time}.
                             {input_text}.
                             """
             print(f"{len(input_prompt)} char input: {input_prompt}")
