@@ -96,16 +96,17 @@ with st.sidebar:
         st.error("Start Time cannot be in the future!")
     start_time = end_time - pd.to_timedelta(period)
     cols =  st.columns(2)
-    if cols[0].button("◀ 6 hours"):
+    button_time = 3
+    if cols[0].button(f"◀ {button_time} hours"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(period)
-        st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta("6h")
+        st.session_state['load_time'] = st.session_state['load_time'] - pd.to_timedelta(f"{button_time}h")
         st.session_state['button_rerun'] = True
         st.experimental_rerun()
-    if cols[1].button("6 hours ▶"):
+    if cols[1].button(f"{button_time} hours ▶"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(period)
-        st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta("6h")
+        st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta(f"{button_time}h")
         st.session_state['button_rerun'] = True
         st.experimental_rerun()
 
@@ -142,7 +143,8 @@ article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time
 twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
 twitter_dash_data["timestamp"] = pd.to_datetime(twitter_dash_data["timestamp"])
 logits_df = pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
-logits_df = logits_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
+logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
+
 
 
 # Process Notifications
