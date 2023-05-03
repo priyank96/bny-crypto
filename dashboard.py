@@ -214,7 +214,7 @@ if selected_tab == tabs[0]:
     if price_fall_values[-2] == 0:
         price_fall_delta = 100
     else:
-        price_fall_delta = round(100*(price_fall_values[-1]-price_fall_values[-2])/price_fall_values[-2],1)
+        price_fall_delta = round(price_fall_values[-1]-price_fall_values[-2],1)
 
     # Price Numbers
     price_values = [round(x,3) for x in price_data_df['close'].values]
@@ -226,7 +226,7 @@ if selected_tab == tabs[0]:
     cols = st.columns(3)
 
     # cols[0].metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
-    cols[0].metric(label="Price Fall Risk", value=f'{price_fall_values[-1]}%', delta=f"{price_fall_delta}% in {time_interval}", delta_color="off" if price_fall_delta == 0 else "inverse", help=f'Probability of Price to fall in the next 6 hours')
+    cols[0].metric(label="Confidence of Price Fall", value=f'{price_fall_values[-1]}%', delta=f"{price_fall_delta}% in {time_interval}", delta_color="off" if price_fall_delta == 0 else "inverse", help=f'Confidence of price to fall by more than 3.8% in the next 6 hours')
     cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
     cols[2].metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
@@ -267,33 +267,28 @@ if selected_tab == tabs[1]:
     #     """)
 
     main_cols = st.columns([3,1])
-    with main_cols[0]:
-        # with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
-        #     st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
 
-        # with st.expander(f"**Mentions #crypto #btc (Placeholder Data)**", expanded=True):
-        #     st.plotly_chart(plots.mentions_line_plot(title='Mentions', n=10), use_container_width=True)
+    with main_cols[0].expander(f"**Tweet Sentiment Trend ({period})**", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+        st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y="sentiment",
+                                                line_name="average user sentiment"), use_container_width=True)
+        
+    with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
 
-        with st.expander(f"**Hashtags Word Cloud**", expanded=True):
-            plot_time = pd.to_datetime(end_time, utc=True)
-            st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
+    with main_cols[0].expander(f"**Chatter Danger Zone**", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind+1]), use_container_width=True)
 
-        with st.expander(f"**Chatter Danger Zone**", expanded=True):
-            plot_time = pd.to_datetime(end_time, utc=True)
-            ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-            st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind]), use_container_width=True)
+    with main_cols[0].expander(f"**Count of Tweets and Reach of Tweets (based on Twitter Algo)**", expanded=True):
+        plot_time = pd.to_datetime(end_time, utc=True)
+        ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
+        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x="timestamp", column_y1="reach", column_y2="tweet_count",
+                                                    line_name1 = "Reach", line_name2 = "Tweet Count"), use_container_width=True)
 
-        with st.expander(f"**Average Tweet Sentiment Trend**", expanded=True):
-            plot_time = pd.to_datetime(end_time, utc=True)
-            ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-            st.plotly_chart(plots.line_plot_single(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y="sentiment",
-                                                    line_name="average user sentiment"), use_container_width=True)
-
-        with st.expander(f"**Viral Tweet Tracker**", expanded=True):
-            plot_time = pd.to_datetime(end_time, utc=True)
-            ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-            st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind], column_x="timestamp", column_y1="reach", column_y2="tweet_count"
-            , line_name1 = "Reach", line_name2 = "Tweet Count"), use_container_width=True)
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
             order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
