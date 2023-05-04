@@ -171,15 +171,39 @@ elif 'd' in period:
     num_lookback_points = (int(period.split('d')[0]) * 24 * 2) + 1
 
 # Load Dataframes
-price_data_df = pd.read_csv("new_values.csv")
-price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
-news_sentiment_df = DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
-article_df = DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
-twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
-twitter_dash_data['timestamp'] = pd.to_datetime(twitter_dash_data['timestamp'])
-logits_df = pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
+@st.cache_data
+def get_price_data_df():
+    price_data_df = pd.read_csv("new_values.csv")
+    price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
+    return price_data_df
+
+@st.cache_data
+def get_news_sentiment_df():
+    return DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
+
+@st.cache_data
+def get_article_df():
+    return DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
+
+@st.cache_data
+def get_twitter_dash_data():
+    twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
+    twitter_dash_data['timestamp'] = pd.to_datetime(twitter_dash_data['timestamp'])
+    return twitter_dash_data
+
+@st.cache_data
+def get_logits_df():
+    return pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
+
+@st.cache_data
+def get_tweet_df():
+    return pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
+
+
+logits_df = get_logits_df()
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
-tweet_df = pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
+
+tweet_df = get_tweet_df()
 tweet_df = tweet_df.query(f'"{str(start_time)}" <= timestamp <= "{str(end_time)}+00:00"')
 # st.write(f"{str(start_time)} <= timestamp <= {str(end_time)}+00:00")
 # st.write(f"{tweet_df.iloc[-1:-30:-1]['timestamp']}")
@@ -243,7 +267,7 @@ selected_tab = st.session_state['selected_tab'] if 'selected_tab' in st.session_
 
 # with tab_overview:
 if selected_tab == tabs[0]:
-    
+    price_data_df = get_price_data_df()
     # FMDD Numbers
     # fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
     # if fmdd_values[-2] == 0:
@@ -301,6 +325,7 @@ if selected_tab == tabs[0]:
 
 # with tab_social:
 if selected_tab == tabs[1]:
+    twitter_dash_data = get_twitter_dash_data()
     if development_mode is True:
         with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
             st.markdown("""
@@ -377,7 +402,8 @@ if selected_tab == tabs[1]:
 
 # with tab_news:
 if selected_tab == tabs[2]:
-
+    news_sentiment_df = get_news_sentiment_df()
+    article_df = get_article_df()
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
@@ -430,6 +456,7 @@ if selected_tab == tabs[2]:
 
 # with tab_ti:
 if selected_tab == tabs[3]:
+    price_data_df = get_price_data_df()
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
