@@ -174,7 +174,7 @@ elif 'd' in period:
 @st.cache_data
 def get_price_data_df():
     price_data_df = pd.read_csv("new_values.csv")
-    price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
+    
     return price_data_df
 
 @st.cache_data
@@ -199,7 +199,10 @@ def get_logits_df():
 def get_tweet_df():
     return pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
 
-
+price_data_df = get_price_data_df()
+price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
+news_sentiment_df = get_news_sentiment_df()
+article_df = get_article_df()
 logits_df = get_logits_df()
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
 
@@ -267,7 +270,6 @@ selected_tab = st.session_state['selected_tab'] if 'selected_tab' in st.session_
 
 # with tab_overview:
 if selected_tab == tabs[0]:
-    price_data_df = get_price_data_df()
     # FMDD Numbers
     # fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
     # if fmdd_values[-2] == 0:
@@ -402,8 +404,7 @@ if selected_tab == tabs[1]:
 
 # with tab_news:
 if selected_tab == tabs[2]:
-    news_sentiment_df = get_news_sentiment_df()
-    article_df = get_article_df()
+    
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
