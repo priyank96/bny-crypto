@@ -16,8 +16,6 @@ from streamlit_option_menu import option_menu
 import streamlit_helpers
 from plots import plots
 
-
-
 from event_data import DashboardNewsData # In event_data/api.py
 
 import asyncio
@@ -172,13 +170,24 @@ elif 'd' in period:
 # Load Bing API Key
 @st.cache_data
 def get_bing_chat_api_key(file_path = 'cookies.json'):
-    with open('cookies.json', 'r') as f: # Download from: https://drive.google.com/drive/u/0/folders/1yaSUB0mIycoLPF11ZXiWGsM47PxfdZCH
-        return json.load(f)
+    try:
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/1yaSUB0mIycoLPF11ZXiWGsM47PxfdZCH'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
 
 # Load Dataframes
 @st.cache_data
-def get_price_data_df():
-    return pd.read_csv("new_values.csv") # Download from: https://drive.google.com/drive/u/0/folders/10_ddNCmYj-3mLQNsJjasLR5ZeaqdTnlb
+def get_price_data_df(file_path="new_values.csv"):
+    try:
+        return pd.read_csv(file_path) 
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/10_ddNCmYj-3mLQNsJjasLR5ZeaqdTnlb'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
+
 
 @st.cache_data
 def get_news_sentiment_df(asset, start_time, end_time):
@@ -189,18 +198,35 @@ def get_article_df(asset, start_time, end_time):
     return DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
 
 @st.cache_data
-def get_twitter_dash_data():
-    twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: https://drive.google.com/drive/u/0/folders/1dpnfArCSXmh4Pbnq4BiSaenB63_PwQP_
-    twitter_dash_data['timestamp'] = pd.to_datetime(twitter_dash_data['timestamp'])
-    return twitter_dash_data
+def get_twitter_dash_data(file_path = "twitter_dash_data.csv"):
+    try: 
+        twitter_dash_data = pd.read_csv(file_path) 
+        twitter_dash_data['timestamp'] = pd.to_datetime(twitter_dash_data['timestamp'])
+        return twitter_dash_data
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/1dpnfArCSXmh4Pbnq4BiSaenB63_PwQP_'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
+        
 
 @st.cache_data
-def get_logits_df():
-    return pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5
-
+def get_logits_df(file_path = "with_news_predictions_val_95_12h.csv"):
+    try:
+        return pd.read_csv(file_path) 
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
+    
 @st.cache_data
-def get_tweet_df():
-    return pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
+def get_tweet_df(file_path = 'tweets_with_consolidated_reach.csv'):
+    try:
+        return pd.read_csv(file_path) 
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
+    
 
 Bing_API_KEY = get_bing_chat_api_key()
 price_data_df = get_price_data_df()
