@@ -4,11 +4,8 @@ import json
 import time
 from sys import argv
 
-with open('cookies.json', 'r') as f:
-    BING_COOKIES_FILE = json.load(f)
-
-async def ask_bing(input_prompt):
-    bot = Chatbot(cookies=BING_COOKIES_FILE)
+async def ask_bing(input_prompt, Bing_API_KEY):
+    bot = Chatbot(cookies=Bing_API_KEY)
     # input_prompt = input("User: ")
     wait_count = 0
     while True:
@@ -19,8 +16,9 @@ async def ask_bing(input_prompt):
             await bot.close()
             return reply
 
-
 if __name__ == "__main__":
+    with open('cookies.json', 'r') as f: # Download from: https://drive.google.com/drive/u/0/folders/1yaSUB0mIycoLPF11ZXiWGsM47PxfdZCH
+        Bing_API_KEY = json.load(f)
     input_prompt = " ".join(argv[1:])
     print(f"Input: {input_prompt}")
-    print(f"Reply: {asyncio.run(ask_bing(input_prompt))}")
+    print(f"Reply: {asyncio.run(ask_bing(input_prompt, Bing_API_KEY))}")

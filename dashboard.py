@@ -20,7 +20,6 @@ from plots import plots
 
 from event_data import DashboardNewsData # In event_data/api.py
 
-import bing_chatbot
 import asyncio
 from EdgeGPT import Chatbot, ConversationStyle
 import json
@@ -170,42 +169,46 @@ if 'h' in period:
 elif 'd' in period:
     num_lookback_points = (int(period.split('d')[0]) * 24 * 2) + 1
 
+# Load Bing API Key
+@st.cache_data
+def get_bing_chat_api_key(file_path = 'cookies.json'):
+    with open('cookies.json', 'r') as f: # Download from: https://drive.google.com/drive/u/0/folders/1yaSUB0mIycoLPF11ZXiWGsM47PxfdZCH
+        return json.load(f)
+
 # Load Dataframes
 @st.cache_data
 def get_price_data_df():
-    price_data_df = pd.read_csv("new_values.csv")
-    
-    return price_data_df
+    return pd.read_csv("new_values.csv") # Download from: https://drive.google.com/drive/u/0/folders/10_ddNCmYj-3mLQNsJjasLR5ZeaqdTnlb
 
 @st.cache_data
-def get_news_sentiment_df():
+def get_news_sentiment_df(asset, start_time, end_time):
     return DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
 
 @st.cache_data
-def get_article_df():
+def get_article_df(asset, start_time, end_time):
     return DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
 
 @st.cache_data
 def get_twitter_dash_data():
-    twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/twitter_dash_data.csv
+    twitter_dash_data = pd.read_csv("twitter_dash_data.csv") # Download from: https://drive.google.com/drive/u/0/folders/1dpnfArCSXmh4Pbnq4BiSaenB63_PwQP_
     twitter_dash_data['timestamp'] = pd.to_datetime(twitter_dash_data['timestamp'])
     return twitter_dash_data
 
 @st.cache_data
 def get_logits_df():
-    return pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: /content/drive/MyDrive/BNY Crypto Capstone/Data/Results/with_news_predictions_val_95_12h.csv
+    return pd.read_csv('with_news_predictions_val_95_12h.csv') # Download from: https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5
 
 @st.cache_data
 def get_tweet_df():
     return pd.read_csv('./event_data/data/tweets_with_consolidated_reach.csv') # Download from: https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL
 
+Bing_API_KEY = get_bing_chat_api_key()
 price_data_df = get_price_data_df()
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
-news_sentiment_df = get_news_sentiment_df()
-article_df = get_article_df()
+news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
+article_df = get_article_df(asset, start_time, end_time)
 logits_df = get_logits_df()
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
-
 tweet_df = get_tweet_df()
 tweet_df = tweet_df.query(f'"{str(start_time)}" <= timestamp <= "{str(end_time)}+00:00"')
 # st.write(f"{str(start_time)} <= timestamp <= {str(end_time)}+00:00")
@@ -513,7 +516,7 @@ if selected_tab == tabs[4]:
 
     async def ask_bing(input_prompt):
         # return "Amazingly Insightful ChatGPT Response"
-        bot = Chatbot(cookies=bing_chatbot.BING_COOKIES_FILE)
+        bot = Chatbot(cookies=Bing_API_KEY)
         # input_prompt = input("User: ")
         wait_count = 0
         while True:
@@ -527,7 +530,7 @@ if selected_tab == tabs[4]:
 
     async def reset_bing():
         # return "Amazingly Insightful ChatGPT Response"
-        bot = Chatbot(cookies=bing_chatbot.BING_COOKIES_FILE)
+        bot = Chatbot(cookies=Bing_API_KEY)
         await bot.reset()
         await bot.close()
     # def generate_response(input_prompt):
