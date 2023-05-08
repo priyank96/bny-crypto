@@ -133,7 +133,13 @@ if 'ti_selected_values' not in st.session_state: # Default values
 ###################################
 with st.sidebar:
     # st.image("images/bnym_logo.png", width=200, )
-    st.image("images/crisys_logo.png", width=200)
+    file_path = "images/crisys_logo.png"
+    try:
+        st.image(file_path, width=200)
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
     st.title("Dashboard Configuration")
     
     asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
@@ -662,9 +668,20 @@ if selected_tab == tabs[5]:
 
     cols = st.columns(2)
     with cols[0].expander(f"**CMU Student Team**", expanded=True):
-        st.image("images/BNYM_students.jpg", # Download from https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm
-                    use_column_width=True)
+        file_path = "images/BNYM_students.jpg"
+        try:
+            st.image(file_path, use_column_width=True)
+        except:
+            link = 'https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm'
+            st.error(f"Please download the {file_path} from {link}")
+            raise FileNotFoundError(f"Please download {file_path} from {link}")
 
     with cols[1].expander(f"**Project Mentors and CMU Faculty**", expanded=True):
-        st.image("images/BNYM_mentors.jpg", # Download from https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm
-                    use_column_width=True)
+        file_path = "images/BNYM_mentors.jpg"
+        try:
+            st.image(file_path, use_column_width=True)
+        except:
+            link = 'https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm'
+            st.error(f"Please download the {file_path} from {link}")
+            raise FileNotFoundError(f"Please download {file_path} from {link}")
+        
