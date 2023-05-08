@@ -140,6 +140,7 @@ with st.sidebar:
         link = 'https://drive.google.com/drive/u/0/folders/1SyUmoODcE-6KNw6Y9pIh32CVSccDcCdm'
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
+    
     st.title("Dashboard Configuration")
     
     asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
@@ -288,7 +289,7 @@ selected_tab = option_menu(None, tabs, icons=tab_icons,
                            menu_icon="cast", default_index=0, orientation="horizontal",
                            styles={
                                 "container": {"padding": "5!important", "background-color": shade_color},
-                                "nav-link": {"color": '#ffffff'},
+                                "nav-link": {"color": '#ffffff',  'font-weight': 'bold'},
                                 "nav-link-selected": {"background-color": highlight_color}})
 if 'selected_tab' not in st.session_state:
     st.session_state['selected_tab'] = selected_tab
