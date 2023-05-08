@@ -23,6 +23,10 @@ from EdgeGPT import Chatbot, ConversationStyle
 import json
 
 development_mode = False
+# Main Body
+highlight_color = '#e3a72f' # BNYM yellow
+shade_color = '#072632' # BNYM blue
+button_color = '#ff5555' # BNYM red
 
 # Page config. Other configs are loaded from .streamlit/config.toml
 st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
@@ -30,16 +34,20 @@ st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification Syste
 
 # st.balloons()
 st.markdown(streamlit_helpers.hide_streamlit_style, unsafe_allow_html=True)
-st.markdown("""
+st.markdown(f"""
     <style>
-    div.stButton > button:first-child {
-        background-color: #ff5555;
+    div.stButton > button:first-child {{
+        background-color: {button_color};
         color:#ffffff;
-    }
-    div.stButton > button:hover {
-        background-color: #e3a72f;
+    }}
+    div.stButton > button:hover {{
+        background-color: {highlight_color};
         color:#ffffff;
-        }
+    }}
+    section[data-testid="stSidebar"] > div > div > div > div > div > div > div > div > div > div > div > button {{
+        background-color: {highlight_color};
+        color:#ffffff;
+    }}
     </style>""", unsafe_allow_html=True)
 
 
@@ -61,6 +69,16 @@ st.markdown(f""" <style>
         margin-left: auto;
         margin-right: auto;
         width: 100%;
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {shade_color};
+        color: #ffffff;
+    }}
+    section[data-testid="stSidebar"] > div > div > div > div > div > div > div > div > div > h1 {{
+        color: #ffffff;
+    }}
+    section[data-testid="stSidebar"] > div > div > div > div > div > div > div > label > div > p {{
+        color: #ffffff;
     }}
     # div[data-testid="stMarkdownContainer"] p {{
     #     font-size: 1.2em; /* Increase font size */
@@ -140,18 +158,13 @@ with st.sidebar:
 # Only take the crypto symbol
 asset = asset[:3]
 
-
-# Main Body
-highlight_color = '#e3a72f' # BNYM yellow
-shade_color = '#072632' # BNYM blue
-
 # st.markdown(f"""
 # <style>
 #     div.block-container{{
 #         padding-top: 0;
 #     }}
 #     .highlight{{
-#         color: #e3a72f;
+#         color: {highlight_color};
 #     }}
 # </style>
 # <h4>Dashboard for <span class='highlight'>{asset}</span> 
@@ -237,8 +250,6 @@ logits_df = get_logits_df()
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
 tweet_df = get_tweet_df()
 tweet_df = tweet_df.query(f'"{str(start_time)}" <= timestamp <= "{str(end_time)}+00:00"')
-# st.write(f"{str(start_time)} <= timestamp <= {str(end_time)}+00:00")
-# st.write(f"{tweet_df.iloc[-1:-30:-1]['timestamp']}")
 
 # Process Notifications
 # fmdd_threshold = 0.03
@@ -259,7 +270,7 @@ if 'notifications' in st.session_state:
         notification_list = '\n'.join(st.session_state['notifications'])
         cols = st.columns([11, 1])
         cols[0].error(f"""
-            🚨 Alert Notification
+            🚨 Alert 
 
             {notification_list}
             """)
@@ -268,23 +279,16 @@ if 'notifications' in st.session_state:
             st.session_state['notifications'] = False
             st.session_state['button_rerun'] = True
             st.experimental_rerun()
-    # elif st.session_state['notifications'] is False:
-    #     cols = st.columns([5, 1])
-    #     show_notification = cols[1].button("🚨 Show Alert")
-    #     if show_notification:
-    #         del st.session_state['notifications']
-    #         st.session_state['button_rerun'] = True
-    #         st.experimental_rerun()
-
-
-
-    
 
 # tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Tech Indicators", "💬 CrisysGPT Chat", "🤔 More?"])
 tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CrisysGPT Chat', 'About Us']
 selected_tab = option_menu(None, tabs,
                            icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'people-fill'], # Icons from https://icons.getbootstrap.com/
-                           menu_icon="cast", default_index=0, orientation="horizontal")
+                           menu_icon="cast", default_index=0, orientation="horizontal",
+                           styles={
+                                "container": {"padding": "5!important", "background-color": shade_color},
+                                "nav-link": {"color": '#ffffff'},
+                                "nav-link-selected": {"background-color": highlight_color}})
 if 'selected_tab' not in st.session_state:
     st.session_state['selected_tab'] = selected_tab
 if selected_tab != st.session_state['selected_tab']:
