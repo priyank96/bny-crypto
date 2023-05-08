@@ -84,7 +84,8 @@ def sentiment_line_plot(title=None, n=10):
 
 
 def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_color=None, fill=None, title=None, 
-                     add_hline=False, hline_value=0.03, hline_color='red', hline_annotation_text='', hline_annotation_position='top right'):
+                     add_hline=False, hline_value=0.03, hline_color='red', hline_annotation_text='', hline_annotation_position='top right',
+                     graph_height=300, legend_y=1.2):
     fig = go.Figure()
     if column_x is None:
         x = df.index
@@ -101,13 +102,14 @@ def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_colo
         layout_margin_top=30
     else:
         layout_margin_top=10
-    fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
+    fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
         x=0,
-        y=1.2), legend_orientation="h")
+        y=legend_y), legend_orientation="h")
     fig['data'][0]['showlegend'] = True
     return fig
 
-def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, y2_value = 0, line_name1=None, line_name2=None, line_color1=None, line_color2=None, fill=None, title=None, xaxis_title=None, yaxis_title=None):
+def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, y2_value = 0, line_name1=None, line_name2=None, line_color1=None, line_color2=None, fill=None, title=None, xaxis_title=None, yaxis_title=None,
+                             graph_height=300, legend_y=1.2):
     # fig = go.Figure()
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
     if column_x is None:
@@ -125,14 +127,15 @@ def line_plot_double_stacked(df, column_x=None, column_y1=None, column_y2=None, 
         layout_margin_top=30
     else:
         layout_margin_top=10
-    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
+    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
         x=0,
-        y=1.2), legend_orientation="h")
+        y=legend_y), legend_orientation="h")
     
     fig['data'][0]['showlegend'] = True
     return fig
 
-def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, y2_value=0, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None, xaxis_title=None, yaxis_title1=None, yaxis_title2=None):
+def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, y2_value=0, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None, xaxis_title=None, yaxis_title1=None, yaxis_title2=None,
+                            graph_height=300, legend_y=1.2):
     
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
@@ -153,14 +156,15 @@ def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, y
         layout_margin_top=10
     # fig.update_yaxes(yaxis_title=yaxis_title1, secondary_y=False)
     # fig.update_yaxes(yaxis_title=yaxis_title2, secondary_y=True)
-    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title1, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
+    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title1, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
         x=0,
-        y=1.2), legend_orientation="h")
+        y=legend_y), legend_orientation="h")
     # fig.update_layout(yaxis2 = dict(range=[0, 8000]))
     fig['data'][0]['showlegend'] = True
     return fig
 
-def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None, xaxis_title=None, yaxis_title1=None, yaxis_title2=None):
+def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None, xaxis_title=None, yaxis_title1=None, yaxis_title2=None,
+                                 graph_height=300, legend_y=1.2):
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
     if column_x is None:
@@ -176,15 +180,16 @@ def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=No
         layout_margin_top=10
     # fig.update_yaxes(yaxis_title=yaxis_title1, secondary_y=False)
     # fig.update_yaxes(yaxis_title=yaxis_title2, secondary_y=True)
-    fig.update_layout(xaxis_title=xaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300)
+    fig.update_layout(xaxis_title=xaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height)
     fig.update_layout(yaxis2 = dict(range=[0, df[column_y2].max()]), legend=dict(
         x=0,
-        y=1.2), legend_orientation="h")
+        y=legend_y), legend_orientation="h")
     fig['data'][0]['showlegend'] = True
     return fig
 
 def line_plot_double_shared_stacked_bars(df, column_x=None, column_y1=None, column_y2=None, line_name1=None, line_name2=None, line_color1=None, line_color2=None, line_fill1=None, line_fill2=None, title=None,
-                                         add_hline=False, hline_value=0.03, hline_color='red', hline_annotation_text='', hline_annotation_position='top left', xaxis_title=None, yaxis_title1=None, yaxis_title2=None):
+                                         add_hline=False, hline_value=0.03, hline_color='red', hline_annotation_text='', hline_annotation_position='top left', xaxis_title=None, yaxis_title1=None, yaxis_title2=None,
+                                         graph_height=300, legend_y=1.2):
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     # fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
     if column_x is None:
@@ -211,11 +216,11 @@ def line_plot_double_shared_stacked_bars(df, column_x=None, column_y1=None, colu
         layout_margin_top=10
     # fig.update_yaxes(yaxis_title=yaxis_title1, secondary_y=False)
     # fig.update_yaxes(yaxis_title=yaxis_title2, secondary_y=True)
-    fig.update_layout(xaxis_title=xaxis_title, barmode='relative', margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300)
+    fig.update_layout(xaxis_title=xaxis_title, barmode='relative', margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height)
     fig.update_layout(yaxis2 = dict(range=[0, df[column_y2].abs().max()]), legend=dict(
         x=0,
         # y=1+(0.2*len(column_y2)),))
-        y=1.2), legend_orientation="h")
+        y=legend_y), legend_orientation="h")
     fig['data'][0]['showlegend'] = True
     return fig
 
@@ -246,7 +251,8 @@ def word_cloud_gen(text):
     fig.update_layout(xaxis_visible=False, yaxis_visible=False)
     return fig
 
-def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None, color_secondary='grey', size=None, opacity=0.5, hover_name=None, hover_data=None, trendline=None, trendline_color=None, trendline_name=None, trendline_dash=None, trendline_width=None, trendline_opacity=None, xaxis_title=None, yaxis_title=None):
+def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None, color_secondary='grey', size=None, opacity=0.5, hover_name=None, hover_data=None, trendline=None, trendline_color=None, trendline_name=None, trendline_dash=None, trendline_width=None, trendline_opacity=None, xaxis_title=None, yaxis_title=None,
+                 graph_height=300, legend_y=1.2):
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(x=df[column_x], y=df[column_y], mode='markers', opacity=opacity, marker_color=color_secondary, marker=dict(size=1), hovertemplate=hover_data, hoverlabel=dict(bgcolor=color_secondary), name="All Tweet Embeddings"))
@@ -260,9 +266,9 @@ def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None,
         layout_margin_top=30
     else:
         layout_margin_top=10
-    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=300, legend=dict(
+    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
         x=0,
         # y=1+(0.2*len(column_y2)),))
-        y=1.2), legend_orientation="h")
+        y=legend_y), legend_orientation="h")
 
     return fig

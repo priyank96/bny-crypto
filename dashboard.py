@@ -1,3 +1,6 @@
+###################################
+### Imports                     ###
+###################################
 import time  # to simulate a real time data, time loop
 
 import numpy as np  # np mean, np random
@@ -22,17 +25,34 @@ import asyncio
 from EdgeGPT import Chatbot, ConversationStyle
 import json
 
+###################################
+### Config Parameters           ###
+###################################
 development_mode = False
-# Main Body
 highlight_color = '#e3a72f' # BNYM yellow
 shade_color = '#072632' # BNYM blue
 button_color = '#ff5555' # BNYM red
+padding = 0
+theme_good = {'bgcolor': '#EFF8F7','title_color': 'green','content_color': 'green','icon_color': 'green', 'icon': 'fa fa-check-circle'}
+theme_neutral = {'bgcolor': '#f9f9f9','title_color': 'orange','content_color': 'orange','icon_color': 'orange', 'icon': 'fa fa-question-circle'}
+theme_bad = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red','icon_color': 'red', 'icon': 'fa fa-times-circle'}
+theme_alert = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red','icon_color': 'red', 'icon': 'fa fa-exclamation-triangle'}
+button_time = 3
+time_interval = '30Min'
+inital_time = datetime.datetime(2022, 6, 30, 11, 0, 0, 0)
+# fmdd_threshold = 0.03
+price_fall_threshold = 50 # In percent
+check_hours = 6
+tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CryptoGPT', 'About Us']
+tab_icons = ['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'people-fill'] # Icons from https://icons.getbootstrap.com/
 
+###################################
+### Dashboard Setup             ###
+###################################
 # Page config. Other configs are loaded from .streamlit/config.toml
 st.set_page_config(page_title="CRISys - Cryptocurrency Risk Identification System Dashboard",
                    page_icon="images/crisys_logo.png", layout="wide", initial_sidebar_state="auto", menu_items=None)
 
-# st.balloons()
 st.markdown(streamlit_helpers.hide_streamlit_style, unsafe_allow_html=True)
 st.markdown(f"""
     <style>
@@ -44,14 +64,12 @@ st.markdown(f"""
         background-color: {highlight_color};
         color:#ffffff;
     }}
-    section[data-testid="stSidebar"] > div > div > div > div > div > div > div > div > div > div > div > button {{
+    section[data-testid="stSidebar"] > div > div > div > div > div > div > div > div > div > div > div > div > div > div > button {{
         background-color: {highlight_color};
         color:#ffffff;
     }}
     </style>""", unsafe_allow_html=True)
 
-
-padding = 0
 st.markdown(f""" <style>
     .reportview-container .main .block-container{{
         padding-top: {padding}rem;
@@ -105,26 +123,21 @@ st.markdown("""
     """
     , unsafe_allow_html=True)
 
-# HydraLit Info cards can apply customisation to almost all the properties of the card, including the progress bar
-theme_good = {'bgcolor': '#EFF8F7','title_color': 'green','content_color': 'green','icon_color': 'green', 'icon': 'fa fa-check-circle'}
-theme_neutral = {'bgcolor': '#f9f9f9','title_color': 'orange','content_color': 'orange','icon_color': 'orange', 'icon': 'fa fa-question-circle'}
-theme_bad = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red','icon_color': 'red', 'icon': 'fa fa-times-circle'}
-theme_alert = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red','icon_color': 'red', 'icon': 'fa fa-exclamation-triangle'}
-
 if 'load_time' not in st.session_state:
-    st.session_state['load_time'] = datetime.datetime(2022, 6, 30, 11, 0, 0, 0) # Dummy value replace with datetime.datetime.now()
+    st.session_state['load_time'] = inital_time # Dummy value replace with datetime.datetime.now()
 if 'ti_selected_values' not in st.session_state: # Default values
     st.session_state['ti_selected_values'] = ['volume', 'rsi', 'volatility', 'var_90']
 
+###################################
+### Sidebar                     ###
+###################################
 with st.sidebar:
     # st.image("images/bnym_logo.png", width=200, )
     st.image("images/crisys_logo.png", width=200)
     st.title("Dashboard Configuration")
     
     asset = st.selectbox("Cryptocurrency:", ["BTC - Bitcoin", "ETH - Etherium", "XRP - Ripple", "SOL - Solana"])
-    # time_interval = st.selectbox("Time Intervals:", ["30Min", "1h", "6h", "1d"])
-    time_interval = '30Min'
-    # period = st.selectbox("Lookback Period:", ["6h", "12h", "24h"], index=2)
+
     period = st.select_slider("Period:", options=['3h', '6h', '12h', '24h', '2d', '4d', '7d', '14d'], value='24h')
     
     date = st.date_input("End Date:", st.session_state['load_time'])
@@ -137,7 +150,7 @@ with st.sidebar:
         st.error("Start Time cannot be in the future!")
     start_time = end_time - pd.to_timedelta(period)
     cols =  st.columns(2)
-    button_time = 3
+    
     if cols[0].button(f"◀ {button_time} hours"):
         # Refresh page with -6 hours delta
         # end_time = datetime.datetime.now() - pd.to_timedelta(period)
@@ -158,29 +171,14 @@ with st.sidebar:
 # Only take the crypto symbol
 asset = asset[:3]
 
-# st.markdown(f"""
-# <style>
-#     div.block-container{{
-#         padding-top: 0;
-#     }}
-#     .highlight{{
-#         color: {highlight_color};
-#     }}
-# </style>
-# <h4>Dashboard for <span class='highlight'>{asset}</span> 
-# in <span class='highlight'>{time_interval}</span> 
-# intervals and <span class='highlight'>{period}</span> lookback period
-# at <span class='highlight'>{end_time.strftime("%Y-%m-%d %H:%M")}</span></h4>
-# """, unsafe_allow_html=True)
-# st.title(f"Dashboard for {asset} in {time_interval} intervals and {period} lookback period")
-# st.markdown('----')
-
 if 'h' in period:
     num_lookback_points = (int(period.split('h')[0]) * 2) + 1 # 24h * 2 + 1
 elif 'd' in period:
     num_lookback_points = (int(period.split('d')[0]) * 24 * 2) + 1
 
-# Load Bing API Key
+###################################
+### Load Data                   ###
+###################################
 @st.cache_data
 def get_bing_chat_api_key(file_path = 'cookies.json'):
     try:
@@ -201,6 +199,14 @@ def get_price_data_df(file_path="new_values.csv"):
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
 
+@st.cache_data
+def get_logits_df(file_path = "with_news_predictions_val_95_12h.csv"):
+    try:
+        return pd.read_csv(file_path) 
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
 
 @st.cache_data
 def get_news_sentiment_df(asset, start_time, end_time):
@@ -220,16 +226,6 @@ def get_twitter_dash_data(file_path = "twitter_dash_data.csv"):
         link = 'https://drive.google.com/drive/u/0/folders/1dpnfArCSXmh4Pbnq4BiSaenB63_PwQP_'
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
-        
-
-@st.cache_data
-def get_logits_df(file_path = "with_news_predictions_val_95_12h.csv"):
-    try:
-        return pd.read_csv(file_path) 
-    except:
-        link = 'https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5'
-        st.error(f"Please download the {file_path} from {link}")
-        raise FileNotFoundError(f"Please download {file_path} from {link}")
     
 @st.cache_data
 def get_tweet_df(file_path = 'tweets_with_consolidated_reach.csv'):
@@ -239,23 +235,25 @@ def get_tweet_df(file_path = 'tweets_with_consolidated_reach.csv'):
         link = 'https://drive.google.com/drive/u/0/folders/1cqPxTpjMJ2sixoHqZZVo4bi3C3Ii6xZL'
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
-    
 
-Bing_API_KEY = get_bing_chat_api_key()
-price_data_df = get_price_data_df()
+# Load Data
+with st.spinner('Loading Data...'):
+    Bing_API_KEY = get_bing_chat_api_key()
+    price_data_df = get_price_data_df()
+    news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
+    article_df = get_article_df(asset, start_time, end_time)
+    logits_df = get_logits_df()
+    tweet_df = get_tweet_df()
+    twitter_dash_data = get_twitter_dash_data()
+
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
-news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
-article_df = get_article_df(asset, start_time, end_time)
-logits_df = get_logits_df()
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
-tweet_df = get_tweet_df()
 tweet_df = tweet_df.query(f'"{str(start_time)}" <= timestamp <= "{str(end_time)}+00:00"')
 
-# Process Notifications
-# fmdd_threshold = 0.03
-price_fall_threshold = 50 # In percent
-check_hours = 6
-
+###################################
+### Dashboard Body              ###
+###################################
+# Notifcations
 if 'notifications' not in st.session_state or ('notification_update_time' in st.session_state and st.session_state['notification_update_time'] != st.session_state['load_time']):
     # if [True for fmdd_value in price_data_df.iloc[-(check_hours*2+1):]['Forward MDD'] if fmdd_value > fmdd_threshold]:
     #     st.session_state['notifications'] = [f"Maximum Draw Down (MDD) was greater than {fmdd_threshold*100}% in the last {check_hours} hours"]
@@ -280,10 +278,7 @@ if 'notifications' in st.session_state:
             st.session_state['button_rerun'] = True
             st.experimental_rerun()
 
-# tab_overview, tab_social, tab_news, tab_ti, tab_chat, tab4 = st.tabs(["📜 Overview", "🐦 Twitter", "📰 News", "📊 Tech Indicators", "💬 CrisysGPT Chat", "🤔 More?"])
-tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CrisysGPT Chat', 'About Us']
-selected_tab = option_menu(None, tabs,
-                           icons=['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'people-fill'], # Icons from https://icons.getbootstrap.com/
+selected_tab = option_menu(None, tabs, icons=tab_icons,
                            menu_icon="cast", default_index=0, orientation="horizontal",
                            styles={
                                 "container": {"padding": "5!important", "background-color": shade_color},
@@ -302,13 +297,7 @@ st.session_state['button_rerun'] = False
 selected_tab = st.session_state['selected_tab'] if 'selected_tab' in st.session_state else selected_tab
 
 # with tab_overview:
-if selected_tab == tabs[0]:
-    # FMDD Numbers
-    # fmdd_values = [round(x,3) for x in price_data_df['Forward MDD'].values]
-    # if fmdd_values[-2] == 0:
-    #     fmdd_delta = 100
-    # else:
-    #     fmdd_delta = round(100*(fmdd_values[-1]-fmdd_values[-2])/fmdd_values[-2],1)
+if selected_tab == tabs[0]: # Overview Tab
 
     # Risk Probability Numbers
     price_fall_values = logits_df['prediction_logit'].values
@@ -344,14 +333,16 @@ if selected_tab == tabs[0]:
         
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
-                                                                   line_name1='Price Fall Probability', line_name2=['Price Contribution to Risk', 'News Contribution to Risk', 'Social Media Contribution to Risk'], 
+                                                                   line_name1='Price Fall Probability', line_name2=['Price Contribution', 'News Contribution', 'Social Media Contribution'], 
                                                                    line_color1='grey', line_color2=[highlight_color,'purple','blue'], title='',
-                                                                   add_hline=True, hline_value=price_fall_threshold, hline_color='red', hline_annotation_text=f'High Risk Threshold = {price_fall_threshold}%')
+                                                                   add_hline=True, hline_value=price_fall_threshold, hline_color='red', hline_annotation_text=f'High Risk Threshold',
+                                                                   graph_height=400, legend_y=1.4)
                         ,use_container_width=True)
 
     with cols[1].expander(f'**Price and Volume ({period}) Shared**', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
-                                                    line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey'),
+                                                    line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey',
+                                                    graph_height=400, legend_y=1.4),
                             use_container_width=True)
     
     # if st.button("<- 30 Min"):
@@ -359,8 +350,8 @@ if selected_tab == tabs[0]:
     #     st.experimental_rerun()
 
 # with tab_social:
-if selected_tab == tabs[1]:
-    twitter_dash_data = get_twitter_dash_data()
+if selected_tab == tabs[1]: # Twitter Tab
+    
     if development_mode is True:
         with st.expander(f"**Work in Progress! 🚧 Coming Soon:**", expanded=False):
             st.markdown("""
@@ -436,7 +427,7 @@ if selected_tab == tabs[1]:
 
 
 # with tab_news:
-if selected_tab == tabs[2]:
+if selected_tab == tabs[2]: # News Tab
     
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
@@ -489,8 +480,8 @@ if selected_tab == tabs[2]:
             # """ + (i != article_df.index[len(article_df) - 1])*'<hr/>', unsafe_allow_html=True)
 
 # with tab_ti:
-if selected_tab == tabs[3]:
-    price_data_df = get_price_data_df()
+if selected_tab == tabs[3]: # Technical Indicators Tab
+
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
@@ -527,7 +518,7 @@ if selected_tab == tabs[3]:
 
 
 # with tab_chat:
-if selected_tab == tabs[4]:
+if selected_tab == tabs[4]: # Chatbot Tab
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
@@ -596,9 +587,9 @@ if selected_tab == tabs[4]:
                                 </script>
                                 """)
 
-        input_text = st.text_input(label="Ask CRISysGPT a question: ",value="", key="input", label_visibility="hidden")
+        input_text = st.text_input(label="Ask CryptoGPT a question: ",value="", key="input", label_visibility="hidden")
     else:
-        input_text = st.text_input("Ask CRISysGPT a question: ",placeholder="Summarize today's price and news", key="input")
+        input_text = st.text_input("Ask CryptoGPT a question: ",placeholder="Summarize today's price and news", key="input")
     cols = st.columns(4)
     ask = cols[0].button("Ask", key="ask")
     reset_chat = cols[-1].button("Reset Chat", key="reset_chat")
@@ -633,13 +624,11 @@ if selected_tab == tabs[4]:
         st.experimental_rerun()
 
     if reset_chat:
-        with st.spinner('🧹Starting Clean...'):
+        with st.spinner('🧹Starting Fresh...'):
             asyncio.run(reset_bing())
             st.session_state['generated'] = []
             st.session_state['past'] = []
             st.experimental_rerun()
-
-
 
 # with tab4:
 # if selected_tab == tabs[5]:
