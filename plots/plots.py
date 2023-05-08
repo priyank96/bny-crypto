@@ -201,7 +201,7 @@ def line_plot_double_shared_stacked_bars(df, column_x=None, column_y1=None, colu
     if add_hline:
         fig.add_trace(go.Line(x=x, y=[hline_value]*len(x), name=hline_annotation_text, marker=dict(color=hline_color), line_dash="dash"), secondary_y=False)
     for i, (col_name, line_name, line_color)  in enumerate(zip(column_y2, line_name2, line_color2)):
-        fig.add_trace(go.Bar(x=x, y=df[col_name], name=line_name, marker=dict(color=line_color, opacity=0.4)), secondary_y=True)
+        fig.add_trace(go.Bar(x=x, y=df[col_name], name=line_name, marker=dict(color=line_color, opacity=0.4)), secondary_y=False)
 
     # if add_hline:
     #     fig.add_hline(y=hline_value, line_width=1, line_dash="longdash", line_color=hline_color, # dash styles: ['solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot']
