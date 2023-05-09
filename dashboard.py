@@ -57,12 +57,18 @@ st.markdown(streamlit_helpers.hide_streamlit_style, unsafe_allow_html=True)
 st.markdown(f"""
     <style>
     div.stButton > button:first-child {{
-        background-color: {button_color};
+        background-color: {highlight_color};
         color:#ffffff;
     }}
     div.stButton > button:hover {{
-        background-color: {highlight_color};
-        color:#ffffff;
+        background-color: {button_color};
+        border-color: {button_color};
+        color:#000;
+    }}
+    div.stButton > button:focus {{
+        background-color: {button_color};
+        border-color: {button_color};
+        color:#000;
     }}
     section[data-testid="stSidebar"] > div > div > div > div > div > div > div > div > div > div > div > div > div > div > button {{
         background-color: {highlight_color};
@@ -215,11 +221,11 @@ def get_logits_df(file_path = "with_news_predictions_val_95_12h.csv"):
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
 
-@st.cache_data
+# @st.cache_data
 def get_news_sentiment_df(asset, start_time, end_time):
     return DashboardNewsData.dashboard_news_aggregated_sentiment(asset, start_time, end_time)
-
-@st.cache_data
+ 
+# @st.cache_data
 def get_article_df(asset, start_time, end_time):
     return DashboardNewsData.dashboard_news_articles_to_show(asset, start_time, end_time)
 
@@ -247,9 +253,8 @@ def get_tweet_df(file_path = 'tweets_with_consolidated_reach.csv'):
 with st.spinner('Loading Data...'):
     Bing_API_KEY = get_bing_chat_api_key()
     price_data_df = get_price_data_df()
-    news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
-    article_df = get_article_df(asset, start_time, end_time)
-    logits_df = get_logits_df()
+    # logits_df = get_logits_df()
+    logits_df = get_logits_df('softmaxed_logits.csv')
     tweet_df = get_tweet_df()
     twitter_dash_data = get_twitter_dash_data()
 
@@ -391,7 +396,16 @@ if selected_tab == tabs[1]: # Twitter Tab
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
             st.write(f"* 4 hour time delay between now and tweet render due to EST to UTC time difference")
-            order = st.selectbox('Sort By:', ['Latest', 'Highest Reach', 'Highest Per Follower Reach'], index=1)
+            # order = st.selectbox('Sort By:', ['Latest', 'Highest Reach', 'Highest Per Follower Reach'], index=1)
+
+            order_list = ['Latest', 'Highest Reach', 'Highest Per Follower Reach']
+            if 'tweet_order' in st.session_state:
+                order = st.selectbox('Sort By:', order_list, index=order_list.index(st.session_state['tweet_order']))
+            else:
+                order = st.selectbox('Sort By:', order_list, index=1)
+
+            st.session_state['tweet_order'] = order
+     
             if order == 'Latest':
                 tweet_df.sort_index(inplace=True, ascending=False)
             elif order == 'Highest Reach':
@@ -435,6 +449,9 @@ if selected_tab == tabs[1]: # Twitter Tab
 
 # with tab_news:
 if selected_tab == tabs[2]: # News Tab
+
+    news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
+    article_df = get_article_df(asset, start_time, end_time)
     
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
@@ -455,20 +472,27 @@ if selected_tab == tabs[2]: # News Tab
 
     with st.expander(f"**News Articles**", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
-        order = st.selectbox('Filter By:', ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral'], index=0)
+        order_list = ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral']
+        if 'news_order' in st.session_state:
+            order = st.selectbox('Filter By:', order_list, index=order_list.index(st.session_state['news_order']))
+        else:
+            order = st.selectbox('Filter By:', order_list, index=0)
+
+        st.session_state['news_order'] = order
+
         if order == 'Latest':
             article_df.sort_index(inplace=True, ascending=False)
         else:
             article_df.sort_index(inplace=True, ascending=False)
-            if order == 'Top Positive':
+            if order == 'Latest Positive':
                 article_df = article_df[article_df['sentiment_logits'] == 'Positive']
-            elif order == 'Top Negative':
+            elif order == 'Latest Negative':
                 article_df = article_df[article_df['sentiment_logits'] == 'Negative']
-            elif order == 'Top Neutral':
+            elif order == 'Latest Neutral':
                 article_df = article_df[article_df['sentiment_logits'] == 'Neutral']
-        
+
         if len(article_df) == 0:
-            st.write("No Articles In this Time Period")
+            st.write("No News Articles In this Time Period")
         for i, row in article_df.iterrows():
             if row['sentiment_logits'] == 'Positive':
                 theme = theme_good
