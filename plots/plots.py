@@ -156,9 +156,15 @@ def line_plot_double_shared(df, column_x=None, column_y1=None, column_y2=None, y
         layout_margin_top=10
     # fig.update_yaxes(yaxis_title=yaxis_title1, secondary_y=False)
     # fig.update_yaxes(yaxis_title=yaxis_title2, secondary_y=True)
-    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title1, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
-        x=0,
-        y=legend_y), legend_orientation="h")
+    fig.update_layout(  xaxis_title=xaxis_title, 
+                        yaxis_title=yaxis_title1, 
+                        barmode='relative', 
+                        margin=dict(l=10, r=10, t=layout_margin_top, b=10), 
+                        height=graph_height,
+                        font=dict(family="Arial Black",size=100),
+                        legend=dict(x=0,y=legend_y), 
+                        legend_orientation="h",
+                        )
     # fig.update_layout(yaxis2 = dict(range=[0, 8000]))
     fig['data'][0]['showlegend'] = True
     return fig
@@ -180,10 +186,16 @@ def line_plot_double_shared_bars(df, column_x=None, column_y1=None, column_y2=No
         layout_margin_top=10
     # fig.update_yaxes(yaxis_title=yaxis_title1, secondary_y=False)
     # fig.update_yaxes(yaxis_title=yaxis_title2, secondary_y=True)
-    fig.update_layout(xaxis_title=xaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height)
-    fig.update_layout(yaxis2 = dict(range=[0, df[column_y2].max()]), legend=dict(
-        x=0,
-        y=legend_y), legend_orientation="h")
+    fig.update_layout(  xaxis_title=xaxis_title, 
+                        yaxis_title=yaxis_title1,
+                        barmode='relative', 
+                        margin=dict(l=10, r=10, t=layout_margin_top, b=10), 
+                        height=graph_height,
+                        font=dict(family="Arial Black",size=100),
+                        yaxis2 = dict(range=[0, df[column_y2].max()]), 
+                        legend=dict(x=0,y=legend_y), 
+                        legend_orientation="h",
+                        )
     # fig.for_each_trace(lambda t: t.update(name = '<b>' + t.name +'</b>'))
     fig['data'][0]['showlegend'] = True
     return fig
@@ -273,9 +285,13 @@ def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None,
         layout_margin_top=30
     else:
         layout_margin_top=10
-    fig.update_layout(xaxis_title=xaxis_title, yaxis_title=yaxis_title, margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
-        x=0,
-        # y=1+(0.2*len(column_y2)),))
-        y=legend_y), legend_orientation="h")
+    fig.update_layout(  xaxis_title=xaxis_title, 
+                        yaxis_title=yaxis_title,
+                        margin=dict(l=10, r=10, t=layout_margin_top, b=10), 
+                        height=graph_height,
+                        font=dict(family="Arial Black",size=100),
+                        legend=dict(x=0,y=legend_y), 
+                        legend_orientation="h",
+                        )
 
     return fig

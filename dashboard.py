@@ -351,14 +351,14 @@ if selected_tab == tabs[0]: # Overview Tab
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
                                                                    line_name1='Price Fall Probability', line_name2=['Price Contribution', 'News Contribution', 'Social Media Contribution'], 
-                                                                   line_color1='grey', line_color2=[highlight_color,'purple','blue'], title='',
+                                                                   line_color1='black', line_color2=[highlight_color,'purple','blue'], title='',
                                                                    add_hline=True, hline_value=price_fall_threshold, hline_color='red', hline_annotation_text=f'High Risk Threshold',
                                                                    graph_height=400, legend_y=1.4)
                         ,use_container_width=True)
 
     with cols[1].expander(f'**Price and Volume ({period}) Shared**', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
-                                                    line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='grey',
+                                                    line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='black',
                                                     graph_height=400, legend_y=1.4),
                             use_container_width=True)
     
@@ -391,23 +391,25 @@ if selected_tab == tabs[1]: # Twitter Tab
         st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
 
     with main_cols[0].expander(f"**Tweet Content Embedding Distance**", expanded=True):
-        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='grey', lookback_hours=12,
+        lookback_hours = st.select_slider("Lookback Hours:", options=['3h', '6h', '12h', '24h'], value='6h')
+        lookback_hours = int(lookback_hours.replace('h',''))
+        st.plotly_chart(plots.scatter_plot(twitter_dash_data.iloc[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='black', lookback_hours=lookback_hours,
                                            xaxis_title="Primary PCA Axis", yaxis_title="Secondary PCA Axis"), use_container_width=True)
 
     with main_cols[0].expander(f"**Reach of Tweets (based on Twitter Algo) vs Number of Tweets**", expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="reach", column_y2="tweet_count", line_fill1=None, line_fill2='tozeroy',
-                                                    line_name1 = 'Tweet Reach', line_name2 = 'Number of Tweet', line_color1=highlight_color, line_color2='grey'), use_container_width=True)
+                                                    line_name1 = 'Tweet Reach', line_name2 = 'Number of Tweet', line_color1=highlight_color, line_color2='black'), use_container_width=True)
 
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
             # st.write(f"* 4 hour time delay between now and tweet render due to EST to UTC time difference")
             # order = st.selectbox('Sort By:', ['Latest', 'Highest Reach', 'Highest Per Follower Reach'], index=1)
-
+            st.write()
             order_list = ['Latest', 'Highest Reach', 'Highest Per Follower Reach']
             if 'tweet_order' in st.session_state:
-                order = st.selectbox('Sort By:', order_list, index=order_list.index(st.session_state['tweet_order']))
+                order = st.selectbox(f'{len(tweet_df)} Tweets in {period}', order_list, index=order_list.index(st.session_state['tweet_order']))
             else:
-                order = st.selectbox('Sort By:', order_list, index=1)
+                order = st.selectbox(f'{len(tweet_df)} Tweets in {period}', order_list, index=1)
 
             st.session_state['tweet_order'] = order
      
@@ -436,19 +438,23 @@ if selected_tab == tabs[1]: # Twitter Tab
             <style>
             .more_button {{
                 background-color: #ffffff;
-                border: 1px solid grey;
+                border: 1px solid black;
                 color: rgb(0, 111, 214);
                 padding: 10px 20px;
                 text-align: center;
                 text-decoration: none;
                 display: inline-block;
                 margin: auto;
+                position: relative;
                 cursor: pointer;
                 border-radius: 9999px;
                 font-family: inherit;
             }}
             </style>
-            <button class="more_button">{len(tweet_df)-load_tweets_count} more Tweets in {period}</button>
+            <div style="text-align: center;">
+                <button class="more_button">{len(tweet_df)-load_tweets_count} more Tweets</button>
+            </div>
+            <br>
             """, unsafe_allow_html=True)
 
             cols = st.columns(2)
@@ -492,7 +498,7 @@ if selected_tab == tabs[2]: # News Tab
             st.write("No Articles In this Time Period")
         else:
             st.plotly_chart(plots.line_plot_double_shared(news_sentiment_df, column_y1="sentiment", y2_value=0,
-                                                    line_name1="News Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Logits'), use_container_width=True)
+                                                    line_name1="News Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Score'), use_container_width=True)
 
     with st.expander(f"**News Articles**", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
@@ -560,15 +566,15 @@ if selected_tab == tabs[3]: # Technical Indicators Tab
         with st.expander(f'**{selected_value_name} history ({period}) Shared**', expanded=True):
             if selected_value == 'volume':
                 st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2=selected_value, line_fill1=None, line_fill2='tozeroy',
-                                                            line_name1="Price", line_name2=selected_value_name, line_color1=highlight_color, line_color2='grey'),
+                                                            line_name1="Price", line_name2=selected_value_name, line_color1=highlight_color, line_color2='black'),
                                     use_container_width=True)
             else:
                 cols = st.columns(2)
                 cols[0].plotly_chart(plots.line_plot_double_shared(price_data_df, column_x = 'timestamp', column_y1='close', column_y2=selected_value, line_fill1=None, line_fill2='tozeroy',
-                                                            line_name1="Price", line_name2=selected_value, line_color1=highlight_color, line_color2='grey'),
+                                                            line_name1="Price", line_name2=selected_value, line_color1=highlight_color, line_color2='black'),
                                     use_container_width=True)
                 cols[1].plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1=selected_value, column_y2='volume', line_fill1=None, line_fill2='tozeroy',
-                                                            line_name1=selected_value, line_name2='volume', line_color1='grey', line_color2=highlight_color),
+                                                            line_name1=selected_value, line_name2='volume', line_color1='black', line_color2=highlight_color),
                                     use_container_width=True)
 
 
