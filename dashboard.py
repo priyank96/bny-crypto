@@ -44,10 +44,11 @@ inital_time = datetime.datetime(2022, 6, 6, 17, 0, 0, 0)
 price_fall_threshold = 50 # In percent
 check_hours = 6
 tabs = ['Overview', 'Social Media', 'News', 'Techical Indicators', 'CryptoGPT']
+tab_icons = ['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill']  # Icons from https://icons.getbootstrap.com/
 if development_mode:
     tabs.append('About Us')
-tab_icons = ['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'people-fill'] # Icons from https://icons.getbootstrap.com/
-
+    tab_icons.append('people-fill')
+load_tweets_count = 10
 ###################################
 ### Dashboard Setup             ###
 ###################################
@@ -424,14 +425,33 @@ if selected_tab == tabs[1]: # Twitter Tab
                 # elif order == 'Top Neutral':
                 #     tweet_df = tweet_df[tweet_df['sentiment_logits'] == 'Neutral']
 
-            load_tweets_count = 20
+            
                 
             for i, row in tweet_df.iloc[:load_tweets_count].iterrows():
                 
                 t = streamlit_helpers.Tweet(row['url']).component(height=350)
                 st.write('---')
 
-            cols = st.columns([2,1,2])
+            st.markdown(f"""
+            <style>
+            .more_button {{
+                background-color: #ffffff;
+                border: 1px solid grey;
+                color: rgb(0, 111, 214);
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                margin: auto;
+                cursor: pointer;
+                border-radius: 9999px;
+                font-family: inherit;
+            }}
+            </style>
+            <button class="more_button">{len(tweet_df)-load_tweets_count} more Tweets in {period}</button>
+            """, unsafe_allow_html=True)
+
+            cols = st.columns(2)
             if cols[0].button(f"◀ {load_tweets_count} Tweets"):
                 # Refresh page with -6 hours delta
                 # end_time = datetime.datetime.now() - pd.to_timedelta(period)
@@ -440,7 +460,7 @@ if selected_tab == tabs[1]: # Twitter Tab
                 if 'notifications' in st.session_state:
                     del st.session_state['notifications']
                 st.experimental_rerun()
-            if cols[2].button(f"{load_tweets_count} Tweets ▶"):
+            if cols[1].button(f"{load_tweets_count} Tweets ▶"):
                 # Refresh page with -6 hours delta
                 # end_time = datetime.datetime.now() - pd.to_timedelta(period)
                 st.session_state['load_time'] = st.session_state['load_time'] + pd.to_timedelta(f"{load_tweets_count}h")
