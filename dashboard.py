@@ -565,7 +565,7 @@ if selected_tab == tabs[3]: # Technical Indicators Tab
 
             
 
-        with st.expander(f'**{selected_value_name} history ({period}) Shared**', expanded=True):
+        with st.expander(f'**{selected_value_name} history ({period})**', expanded=True):
             if selected_value == 'volume':
                 st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2=selected_value, line_fill1=None, line_fill2='tozeroy',
                                                             line_name1="Price", line_name2=selected_value_name, line_color1=highlight_color, line_color2='black'),
