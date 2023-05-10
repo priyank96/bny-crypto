@@ -16,5 +16,5 @@ font="monospace"
 [client]
 # Whether to enable st.cache.
 # Default: true
-caching = false
+caching = true
 

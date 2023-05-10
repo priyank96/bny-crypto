@@ -39,11 +39,13 @@ theme_bad = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red','i
 theme_alert = {'bgcolor': '#FFF0F0','title_color': 'red','content_color': 'red','icon_color': 'red', 'icon': 'fa fa-exclamation-triangle'}
 button_time = 3
 time_interval = '30Min'
-inital_time = datetime.datetime(2022, 6, 30, 11, 0, 0, 0)
+inital_time = datetime.datetime(2022, 6, 6, 17, 0, 0, 0)
 # fmdd_threshold = 0.03
 price_fall_threshold = 50 # In percent
 check_hours = 6
-tabs = ['Overview', 'Twitter', 'News', 'Tech Indicators', 'CryptoGPT', 'About Us']
+tabs = ['Overview', 'Social Media', 'News', 'Techical Indicators', 'CryptoGPT']
+if development_mode:
+    tabs.append('About Us')
 tab_icons = ['house-fill', 'twitter', 'newspaper', 'bar-chart-line-fill', 'chat-dots-fill', 'people-fill'] # Icons from https://icons.getbootstrap.com/
 
 ###################################
@@ -153,7 +155,7 @@ with st.sidebar:
 
     period = st.select_slider("Period:", options=['3h', '6h', '12h', '24h', '2d', '4d', '7d', '14d'], value='24h')
     
-    date = st.date_input("End Date:", st.session_state['load_time'])
+    date = st.date_input("End Date:", st.session_state['load_time'], min_value=datetime.datetime(2022, 5, 19), max_value=datetime.datetime(2022, 7, 18))
     # end_time = st.time_input("Start Time:", streamlit_helpers.round_time(datetime.datetime.now()))
     end_time = st.time_input("End Time:", streamlit_helpers.round_time(st.session_state['load_time'], mins_delta=30), step=datetime.timedelta(minutes=30))
     # end_time = st.time_input("Start Time:")
@@ -217,7 +219,10 @@ def get_logits_df(file_path = "with_news_predictions_val_95_12h.csv"):
     try:
         return pd.read_csv(file_path) 
     except:
-        link = 'https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5'
+        if file_path == 'with_news_predictions_val_95_12h.csv':
+            link = 'https://drive.google.com/drive/u/0/folders/10wZur0a2ItSWzRI4PhVGr2i4LMN3bvz5'
+        elif file_path == 'softmaxed_logits.csv':
+            link = 'https://drive.google.com/drive/u/0/folders/1dpnfArCSXmh4Pbnq4BiSaenB63_PwQP_'
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
 
@@ -241,7 +246,7 @@ def get_twitter_dash_data(file_path = "twitter_dash_data.csv"):
         raise FileNotFoundError(f"Please download {file_path} from {link}")
     
 @st.cache_data
-def get_tweet_df(file_path = 'tweets_with_consolidated_reach.csv'):
+def get_tweet_df(file_path = 'tweets_with_consolidated_reach_subset.csv'):
     try:
         return pd.read_csv(file_path) 
     except:
@@ -253,7 +258,6 @@ def get_tweet_df(file_path = 'tweets_with_consolidated_reach.csv'):
 with st.spinner('Loading Data...'):
     Bing_API_KEY = get_bing_chat_api_key()
     price_data_df = get_price_data_df()
-    # logits_df = get_logits_df()
     logits_df = get_logits_df('softmaxed_logits.csv')
     tweet_df = get_tweet_df()
     twitter_dash_data = get_twitter_dash_data()
@@ -291,11 +295,11 @@ if 'notifications' in st.session_state:
             st.experimental_rerun()
 
 selected_tab = option_menu(None, tabs, icons=tab_icons,
-                           menu_icon="cast", default_index=0, orientation="horizontal",
-                           styles={
-                                "container": {"padding": "5!important", "background-color": shade_color},
-                                "nav-link": {"color": '#ffffff',  'font-weight': 'bold'},
-                                "nav-link-selected": {"background-color": highlight_color}})
+                            menu_icon="cast", default_index=0, orientation="horizontal",
+                            styles={
+                                    "container": {"padding": "5!important", "background-color": shade_color},
+                                    "nav-link": {"color": '#ffffff',  'font-weight': 'bold'},
+                                    "nav-link-selected": {"background-color": highlight_color}})
 if 'selected_tab' not in st.session_state:
     st.session_state['selected_tab'] = selected_tab
 if selected_tab != st.session_state['selected_tab']:
@@ -330,7 +334,7 @@ if selected_tab == tabs[0]: # Overview Tab
     
 
     # cols[0].metric(label="Maximum Draw Down", value=fmdd_values[-1], delta=f"{fmdd_delta}% in {time_interval}", delta_color="off" if fmdd_delta == 0 else "inverse", help=f'Risk of Price Fall in next 6 hours')
-    cols[0].metric(label="Confidence of Price Fall", value=f'{price_fall_values[-1]}%', delta=f"{price_fall_delta}% in {time_interval}", delta_color="off" if price_fall_delta == 0 else "inverse", help=f'Confidence of price to fall by more than 3.8% in the next 6 hours')
+    cols[0].metric(label="Risk Event Probability", value=f'{price_fall_values[-1]}%', delta=f"{price_fall_delta}% in {time_interval}", delta_color="off" if price_fall_delta == 0 else "inverse", help=f'Confidence of price to fall by more than 3.8% in the next 6 hours')
     cols[1].metric(label=f"{asset} Price", value=f'${price_values[-1]}', delta=f"{price_delta}% in {time_interval}", delta_color="off" if price_delta == 0 else "normal", help=f'Last trade price value in USD at {end_time}')
     cols[2].metric(label=f"{asset} Volume", value=f'{volume_values[-1]}', delta=f"{volume_delta}% in {time_interval}", delta_color="off" if volume_delta == 0 else "normal", help=f'Units of cryptocurrency traded in last {time_interval}')
     
@@ -341,7 +345,7 @@ if selected_tab == tabs[0]: # Overview Tab
     #                                                 add_hline=True, hline_value=fmdd_threshold, hline_color='red', hline_annotation_text='High Risk Threshold'),
     #                         use_container_width=True)
     
-    with cols[0].expander(f'**Price Fall Risk and Factors ({period})**', expanded=True):
+    with cols[0].expander(f'**Risk Event Probability and Factors ({period})**', expanded=True):
         
         st.plotly_chart(plots.line_plot_double_shared_stacked_bars(df=logits_df, column_x='timestamp', 
                                                                    column_y1='prediction_logit', column_y2=['price_contribution', 'news_contribution', 'social_media_contribution'], 
@@ -380,13 +384,13 @@ if selected_tab == tabs[1]: # Twitter Tab
     ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
     with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
         st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="sentiment", y2_value=0,
-                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Logits'), use_container_width=True)
+                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Score'), use_container_width=True)
         
     with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
         st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
 
     with main_cols[0].expander(f"**Tweet Content Embedding Distance**", expanded=True):
-        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='grey',
+        st.plotly_chart(plots.scatter_plot(twitter_dash_data[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='grey', lookback_hours=12,
                                            xaxis_title="Primary PCA Axis", yaxis_title="Secondary PCA Axis"), use_container_width=True)
 
     with main_cols[0].expander(f"**Reach of Tweets (based on Twitter Algo) vs Number of Tweets**", expanded=True):
@@ -395,7 +399,7 @@ if selected_tab == tabs[1]: # Twitter Tab
 
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
-            st.write(f"* 4 hour time delay between now and tweet render due to EST to UTC time difference")
+            # st.write(f"* 4 hour time delay between now and tweet render due to EST to UTC time difference")
             # order = st.selectbox('Sort By:', ['Latest', 'Highest Reach', 'Highest Per Follower Reach'], index=1)
 
             order_list = ['Latest', 'Highest Reach', 'Highest Per Follower Reach']
@@ -618,8 +622,16 @@ if selected_tab == tabs[4]: # Chatbot Tab
                                 </script>
                                 """)
 
-        input_text = st.text_input(label="Ask CryptoGPT a question: ",value="", key="input", label_visibility="hidden")
+        # input_text = st.text_input(label="Ask CryptoGPT a question: ",value="", key="input", label_visibility="hidden")
+        with st.form(key='my_form', clear_on_submit=True):
+            input_text = st.text_area(label="Ask CryptoGPT a question: ", placeholder="Summarize today's price and news", key='input', height=100, label_visibility="hidden")
+            submit_button = st.form_submit_button(label='Ask')
     else:
+        with st.form(key='my_form', clear_on_submit=True):
+            input_text = st.text_area(label="Ask CryptoGPT a question: ", placeholder="Summarize today's price and news", key='input', height=100)
+            submit_button = st.form_submit_button(label='Ask')
+
+    if submit_button and user_input:
         input_text = st.text_input("Ask CryptoGPT a question: ",placeholder="Summarize today's price and news", key="input")
     cols = st.columns(4)
     ask = cols[0].button("Ask", key="ask")
@@ -680,8 +692,9 @@ if selected_tab == tabs[4]: # Chatbot Tab
 #                 st.image(
 #                     f"https://alternative.me/images/fng/crypto-fear-and-greed-index-{str(date).replace('-0', '-')}.png",
 #                     use_column_width=True)
-                
-if selected_tab == tabs[5]:
+
+         
+if development_mode and selected_tab == tabs[5]: # About Us Tab
 
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
