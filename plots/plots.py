@@ -279,7 +279,31 @@ def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None,
     fig.add_trace(go.Scatter(x=df[column_x].values[-(lookback_hours*2+1):], y=df[column_y].values[-(lookback_hours*2+1):], opacity=0.6, mode='markers', marker=dict(size=20, color=color_primary), name=f"Last {lookback_hours} hours Tweet Embeddings"))
     
     # Add shapes
-    fig.add_trace(go.Scatter(x=[3], y=[0.25], opacity=0.2, mode='markers', marker=dict(size=60, color='red'), name="High Price Fall Risk Zone"))
+    fig.add_trace(go.Scatter(x=[2.75], y=[-0.3], opacity=0.2, mode='markers', marker=dict(size=90, color='red'), name="High Price Fall Risk Zone"))
+    fig.add_shape(type="circle",
+        xref="x", yref="y",
+        x0=0.9, y0=-0.6,
+        x1=2.1, y1=-1.5,
+        opacity=0.2,
+        fillcolor="red",
+        line_color="red",
+    )
+    fig.add_shape(type="circle",
+        xref="x", yref="y",
+        x0=-2, y0=1.3,
+        x1=-0.6, y1=2.3,
+        opacity=0.2,
+        fillcolor="red",
+        line_color="red",
+    )
+    fig.add_shape(type="circle",
+        xref="x", yref="y",
+        x0=0.3, y0=1.2,
+        x1=1.9, y1=2.3,
+        opacity=0.2,
+        fillcolor="red",
+        line_color="red",
+    )
     if title is not None:
         fig.update_layout(title_text=title)
         layout_margin_top=30

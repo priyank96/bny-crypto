@@ -383,23 +383,25 @@ if selected_tab == tabs[1]: # Twitter Tab
 
     plot_time = pd.to_datetime(end_time, utc=True)
     ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
-    with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
-        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="sentiment", y2_value=0,
-                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment Score'), use_container_width=True)
-        
-    with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
-        st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
-
-    with main_cols[0].expander(f"**Tweet Content Embedding Distance**", expanded=True):
-        lookback_hours = st.select_slider("Lookback Hours:", options=['3h', '6h', '12h', '24h'], value='6h')
-        lookback_hours = int(lookback_hours.replace('h',''))
-        st.plotly_chart(plots.scatter_plot(twitter_dash_data.iloc[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='black', lookback_hours=lookback_hours,
-                                           xaxis_title="Primary PCA Axis", yaxis_title="Secondary PCA Axis"), use_container_width=True)
-
     with main_cols[0].expander(f"**Reach of Tweets (based on Twitter Algo) vs Number of Tweets**", expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="reach", column_y2="tweet_count", line_fill1=None, line_fill2='tozeroy',
                                                     line_name1 = 'Tweet Reach', line_name2 = 'Number of Tweet', line_color1=highlight_color, line_color2='black'), use_container_width=True)
 
+    with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
+        st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="sentiment", y2_value=0,
+                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment'), use_container_width=True)
+        
+    
+    with main_cols[0].expander(f"**Tweet Content Embedding Distance**", expanded=True):
+        lookback_hours = "12h"
+        # st.select_slider("Lookback Hours:", options=['3h', '6h', '12h', '24h'], value='6h')
+        lookback_hours = int(lookback_hours.replace('h',''))
+        st.plotly_chart(plots.scatter_plot(twitter_dash_data.iloc[:ind+1], column_x='embed_PCA_1', column_y='embed_PCA_2', opacity=0.5, color_primary=highlight_color, color_secondary='black', lookback_hours=lookback_hours,
+                                           xaxis_title="Primary PCA Axis", yaxis_title="Secondary PCA Axis"), use_container_width=True)
+    with main_cols[0].expander(f"**#Hashtag Word Cloud**", expanded=True):
+        st.plotly_chart(plots.hashtag_word_cloud(twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time]["hashtags"].iloc[0]), use_container_width=True)
+
+    
     with main_cols[1]:
         with st.expander(f"**Top Tweets**", expanded=True):
             # st.write(f"* 4 hour time delay between now and tweet render due to EST to UTC time difference")
