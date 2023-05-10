@@ -251,13 +251,13 @@ def word_cloud_gen(text):
     fig.update_layout(xaxis_visible=False, yaxis_visible=False)
     return fig
 
-def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None, color_secondary='grey', size=None, opacity=0.5, hover_name=None, hover_data=None, trendline=None, trendline_color=None, trendline_name=None, trendline_dash=None, trendline_width=None, trendline_opacity=None, xaxis_title=None, yaxis_title=None,
+def scatter_plot(df, column_x=None, column_y=None, title='', color_primary=None, color_secondary='grey', size=None, opacity=0.5, hover_name=None, hover_data=None, trendline=None, trendline_color=None, trendline_name=None, trendline_dash=None, trendline_width=None, trendline_opacity=None, xaxis_title=None, yaxis_title=None, lookback_hours=6,
                  graph_height=300, legend_y=1.2):
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(x=df[column_x], y=df[column_y], mode='markers', opacity=opacity, marker_color=color_secondary, marker=dict(size=1), hovertemplate=hover_data, hoverlabel=dict(bgcolor=color_secondary), name="All Tweet Embeddings"))
 
-    fig.add_trace(go.Scatter(x=df[column_x].values[-25:], y=df[column_y].values[-25:], opacity=0.6, mode='markers', marker=dict(size=20, color=color_primary), name="Last 6 hours Tweet Embeddings"))
+    fig.add_trace(go.Scatter(x=df[column_x].values[-(lookback_hours*2+1):], y=df[column_y].values[-25:], opacity=0.6, mode='markers', marker=dict(size=20, color=color_primary), name=f"Last {lookback_hours} hours Tweet Embeddings"))
     
     # Add shapes
     fig.add_trace(go.Scatter(x=[3], y=[0.25], opacity=0.2, mode='markers', marker=dict(size=60, color='red'), name="High Price Fall Risk Zone"))
