@@ -495,7 +495,7 @@ if selected_tab == tabs[2]: # News Tab
             * Add price and FMDD to graph lines overlaid on news sentiment
             """)
 
-    with st.expander(f"**News Entity Rik Trend ({period})**", expanded=True):
+    with st.expander(f"**News Entity Risk Trend ({period})**", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
         if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
@@ -630,10 +630,10 @@ if selected_tab == tabs[4]: # Chatbot Tab
         #     temperature=0.5,
         # )
         # message = completions.choices[0].text
-        # return message 
+        # return message
 
     if st.session_state['generated']:
-    
+
         for i in range(len(st.session_state['generated'])):
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
             message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
@@ -681,16 +681,16 @@ if selected_tab == tabs[4]: # Chatbot Tab
                             {input_text}.
                             """
             print(f"{len(input_prompt)} char input: {input_prompt}")
-            
-            
+
+
             output = asyncio.run(ask_bing(input_prompt))
             output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
             if output[:9] == "However, ":
                 output = output= output[9:]
-        
+
         # time.sleep(30)
         print(f"output: {output}")
-        # store the output 
+        # store the output
         st.session_state['past'].append(input_text)
         st.session_state['generated'].append(output)
         st.experimental_rerun()
