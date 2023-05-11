@@ -83,7 +83,7 @@ def sentiment_line_plot(title=None, n=10):
     return fig
 
 
-def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_color=None, fill=None, title=None, 
+def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_color=None, fill=None, title=None, yaxis_title=None,
                      add_hline=False, hline_value=0.03, hline_color='red', hline_annotation_text='', hline_annotation_position='top right',
                      graph_height=300, legend_y=1.2):
     fig = go.Figure()
@@ -102,9 +102,13 @@ def line_plot_single(df, column_x=None, column_y=None, line_name=None, line_colo
         layout_margin_top=30
     else:
         layout_margin_top=10
-    fig.update_layout(margin=dict(l=10, r=10, t=layout_margin_top, b=10), height=graph_height, legend=dict(
-        x=0,
-        y=legend_y), legend_orientation="h")
+    fig.update_layout(  yaxis_title=yaxis_title, 
+                        margin=dict(l=10, r=10, t=layout_margin_top, b=10), 
+                        height=graph_height,
+                        font=dict(family="Arial Black",size=100),
+                        legend=dict(x=0,y=legend_y), 
+                        legend_orientation="h",
+                    )
     fig['data'][0]['showlegend'] = True
     return fig
 

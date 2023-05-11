@@ -505,7 +505,8 @@ if selected_tab == tabs[2]: # News Tab
         else:
             logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
             st.plotly_chart(plots.line_plot_single(logits_df, column_x='timestamp', column_y="entity_max_fmdd",
-                                                   line_name="News Entity Risk", line_color=highlight_color, fill='tozeroy'), use_container_width=True)
+                                                   line_name="News Entity Risk", line_color=highlight_color, fill='tozeroy', yaxis_title="Entity Risk Score",), 
+                                                   use_container_width=True)
     with st.expander(f"**News Articles**", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
         order_list = ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral']
