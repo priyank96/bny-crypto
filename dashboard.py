@@ -484,7 +484,8 @@ if selected_tab == tabs[2]: # News Tab
 
     news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
     article_df = get_article_df(asset, start_time, end_time)
-    
+    logits_df = get_logits_df()
+
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
@@ -494,12 +495,13 @@ if selected_tab == tabs[2]: # News Tab
             * Add price and FMDD to graph lines overlaid on news sentiment
             """)
 
-    with st.expander(f"**News Sentiment Trend ({period})**", expanded=True):
+    with st.expander(f"**News Entity Risk Trend ({period})**", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
         if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
         else:
-            st.plotly_chart(plots.line_plot_double_shared(news_sentiment_df, column_y1="sentiment", y2_value=0,
+            logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
+            st.plotly_chart(plots.line_plot_double_shared(logits_df, column_y1="sentiment", y2_value=0,
                                                     line_name1="News Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment'), use_container_width=True)
 
     with st.expander(f"**News Articles**", expanded=True):
@@ -629,10 +631,10 @@ if selected_tab == tabs[4]: # Chatbot Tab
         #     temperature=0.5,
         # )
         # message = completions.choices[0].text
-        # return message 
+        # return message
 
     if st.session_state['generated']:
-    
+
         for i in range(len(st.session_state['generated'])):
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
             message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
@@ -680,16 +682,16 @@ if selected_tab == tabs[4]: # Chatbot Tab
                             {input_text}.
                             """
             print(f"{len(input_prompt)} char input: {input_prompt}")
-            
-            
+
+
             output = asyncio.run(ask_bing(input_prompt))
             output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
             if output[:9] == "However, ":
                 output = output= output[9:]
-        
+
         # time.sleep(30)
         print(f"output: {output}")
-        # store the output 
+        # store the output
         st.session_state['past'].append(input_text)
         st.session_state['generated'].append(output)
         st.experimental_rerun()
