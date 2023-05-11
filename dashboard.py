@@ -358,7 +358,7 @@ if selected_tab == tabs[0]: # Overview Tab
 
     with cols[1].expander(f'**Price and Volume ({period}) Shared**', expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(price_data_df, column_x = 'timestamp', column_y1='close', column_y2='volume', line_fill1=None, line_fill2='tozeroy',
-                                                    line_name1="Price", line_name2='Volume', line_color1=highlight_color, line_color2='black',
+                                                    line_name1="Price", line_name2='Volume', line_color2=highlight_color, line_color1='black',
                                                     graph_height=400, legend_y=1.4),
                             use_container_width=True)
     
@@ -385,11 +385,11 @@ if selected_tab == tabs[1]: # Twitter Tab
     ind = twitter_dash_data.loc[twitter_dash_data['timestamp'] == plot_time].index[0]
     with main_cols[0].expander(f"**Engagement of Tweets**", expanded=True):
         st.plotly_chart(plots.line_plot_double_shared_bars(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="reach", column_y2="tweet_count", line_fill1=None, line_fill2='tozeroy',
-                                                    line_name1 = 'Tweet Engagement', line_name2 = 'Number of Tweet', line_color1=highlight_color, line_color2='black'), use_container_width=True)
+                                                    line_name1 = 'Tweet Engagement', line_name2 = 'Number of Tweet', line_color2=highlight_color, line_color1='black'), use_container_width=True)
 
     with main_cols[0].expander(f"**Twitter Sentiment Trend ({period})**", expanded=True):
         st.plotly_chart(plots.line_plot_double_shared(twitter_dash_data[ind-num_lookback_points:ind+1], column_x='timestamp', column_y1="sentiment", y2_value=0,
-                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment'), use_container_width=True)
+                                                    line_name1="User Sentiment", line_name2='Neutral', line_color1="black", line_color2='red', yaxis_title1='Sentiment'), use_container_width=True)
         
     
     with main_cols[0].expander(f"**Tweet Content Embedding Distance**", expanded=True):
@@ -484,7 +484,8 @@ if selected_tab == tabs[2]: # News Tab
 
     news_sentiment_df = get_news_sentiment_df(asset, start_time, end_time)
     article_df = get_article_df(asset, start_time, end_time)
-    
+    logits_df = get_logits_df()
+
     if development_mode is True:
         with st.expander(f"Work in Progress! 🚧 Coming Soon:", expanded=False):
             st.markdown("""
@@ -494,14 +495,14 @@ if selected_tab == tabs[2]: # News Tab
             * Add price and FMDD to graph lines overlaid on news sentiment
             """)
 
-    with st.expander(f"**News Sentiment Trend ({period})**", expanded=True):
+    with st.expander(f"**News Entity Rik Trend ({period})**", expanded=True):
         # st.write(f"{asset}, {start_time}, {end_time}")
         if len(news_sentiment_df) == 0:
             st.write("No Articles In this Time Period")
         else:
-            st.plotly_chart(plots.line_plot_double_shared(news_sentiment_df, column_y1="sentiment", y2_value=0,
-                                                    line_name1="News Sentiment", line_name2='Neutral', line_color1=highlight_color, line_color2='red', yaxis_title1='Sentiment'), use_container_width=True)
-
+            logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
+            st.plotly_chart(plots.line_plot_single(logits_df, column_x='timestamp', column_y="entity_max_fmdd",
+                                                   line_name="News Entity Risk", line_color=highlight_color, fill='tozeroy'), use_container_width=True)
     with st.expander(f"**News Articles**", expanded=True):
         # article_df.set_index('timestamp', inplace=True)
         order_list = ['Latest', 'Latest Positive', 'Latest Negative', 'Latest Neutral']
