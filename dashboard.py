@@ -10,6 +10,8 @@ import datetime
 import random
 import markdown
 import requests
+import openai
+import tiktoken
 
 import streamlit as st  # 🎈 data web app development
 import streamlit.components.v1 as components
@@ -49,6 +51,8 @@ if development_mode:
     tabs.append('About Us')
     tab_icons.append('people-fill')
 load_tweets_count = 10
+chatgpt_df_size = 10
+openai_model_name = "gpt-3.5-turbo-0301"
 ###################################
 ### Dashboard Setup             ###
 ###################################
@@ -195,16 +199,6 @@ elif 'd' in period:
 ###################################
 ### Load Data                   ###
 ###################################
-@st.cache_data
-def get_bing_chat_api_key(file_path = 'cookies.json'):
-    try:
-        with open(file_path, 'r') as f:
-            return json.load(f)
-    except:
-        link = 'https://drive.google.com/drive/u/0/folders/1yaSUB0mIycoLPF11ZXiWGsM47PxfdZCH'
-        st.error(f"Please download the {file_path} from {link}")
-        raise FileNotFoundError(f"Please download {file_path} from {link}")
-
 # Load Dataframes
 @st.cache_data
 def get_price_data_df(file_path="new_values.csv"):
@@ -255,13 +249,23 @@ def get_tweet_df(file_path = 'tweets_with_consolidated_reach_subset.csv'):
         st.error(f"Please download the {file_path} from {link}")
         raise FileNotFoundError(f"Please download {file_path} from {link}")
 
+@st.cache_data
+def get_openai_api_key(file_path = 'openai_api_key.txt'):
+    try:
+        with open(file_path, 'r') as f:
+            return f.read()
+    except:
+        link = 'https://drive.google.com/drive/u/0/folders/1yaSUB0mIycoLPF11ZXiWGsM47PxfdZCH'
+        st.error(f"Please download the {file_path} from {link}")
+        raise FileNotFoundError(f"Please download {file_path} from {link}")
+
 # Load Data
 with st.spinner('Loading Data...'):
-    Bing_API_KEY = get_bing_chat_api_key()
     price_data_df = get_price_data_df()
     logits_df = get_logits_df('softmaxed_logits.csv')
     tweet_df = get_tweet_df()
     twitter_dash_data = get_twitter_dash_data()
+    openai.api_key = get_openai_api_key()
 
 price_data_df = price_data_df.query(f'timestamp <= "{str(end_time)}"').iloc[-num_lookback_points:]
 logits_df = logits_df.query(f'timestamp <= "{str(end_time)}+00:00"').iloc[-num_lookback_points:]
@@ -430,7 +434,6 @@ if selected_tab == tabs[1]: # Twitter Tab
                 #     tweet_df = tweet_df[tweet_df['sentiment_logits'] == 'Neutral']
 
             
-                
             for i, row in tweet_df.iloc[:load_tweets_count].iterrows():
                 
                 t = streamlit_helpers.Tweet(row['url']).component(height=350)
@@ -599,38 +602,32 @@ if selected_tab == tabs[4]: # Chatbot Tab
     if 'past' not in st.session_state:
         st.session_state['past'] = []
 
-    async def ask_bing(input_prompt):
-        # return "Amazingly Insightful ChatGPT Response"
-        bot = Chatbot(cookies=Bing_API_KEY)
-        # input_prompt = input("User: ")
-        wait_count = 0
-        while True:
-            reply_dict = await bot.ask(prompt=input_prompt, conversation_style=ConversationStyle.precise, wss_link="wss://sydney.bing.com/sydney/ChatHub")
-            # print(f"User: {reply_dict['item']['messages'][0]['text']}")
-            reply = reply_dict['item']['messages'][1]['text']
-            # await bot.reset()
-            if 'Searching the web for' not in reply:
-                await bot.close()
-                return reply
+    def ask_chatgpt(user_query):
 
-    async def reset_bing():
-        # return "Amazingly Insightful ChatGPT Response"
-        bot = Chatbot(cookies=Bing_API_KEY)
-        await bot.reset()
-        await bot.close()
-    # def generate_response(input_prompt):
-    #     return bing_chatbot.ask_bing(input_prompt)
-        # return "Amazingly Insightful ChatGPT Response"
-        # completions = openai.Completion.create(
-        #     engine = "text-davinci-003",
-        #     prompt = prompt,
-        #     max_tokens = 1024,
-        #     n = 1,
-        #     stop = None,
-        #     temperature=0.5,
-        # )
-        # message = completions.choices[0].text
-        # return message
+        # Understand Intent
+        message_history = [{"role": "system", "content": f"""
+                                You are CryptoGPT, a chatbot that analyzes, identifies, and advises on price fall risk of {asset} cryptocurrency. 
+                                Consider today as {end_time}.
+                                Data:
+                                twitter_data latest = {tweet_df.sort_index(ascending=False).iloc[:chatgpt_df_size]['BODY']}
+                                twitter_data highest reach = {tweet_df.sort_values(by=['ENGAGEMENT'], ascending=False).iloc[:chatgpt_df_size]['BODY']}
+                                news_data latest = {get_article_df(asset, start_time, end_time).sort_index(ascending=False)}
+                                price_fall_probability = {logits_df.set_index('timestamp')['prediction_logit']}
+                                price_data = {price_data_df.set_index('timestamp')[['close','volume']]}
+                                """}
+                                ]
+        for i in range(len(st.session_state['generated'])):
+            message_history.append({"role": "user", "content": st.session_state['past'][i]})
+            message_history.append({"role": "assistant", "content": st.session_state['generated'][i]})
+        message_history.append({"role": "user", "content": f"{user_query}"})
+        completion = openai.ChatCompletion.create(
+            model = openai_model_name,
+            temperature = 0.8,
+            max_tokens = 4096-streamlit_helpers.num_tokens_from_messages(message_history, model=openai_model_name),
+            messages = message_history
+            )
+        return completion.choices[0].message['content']
+        
 
     if st.session_state['generated']:
 
@@ -638,52 +635,23 @@ if selected_tab == tabs[4]: # Chatbot Tab
             message(st.session_state['past'][i], is_user=True, key=str(i) + '_user', avatar_style="fun-emoji")
             message(st.session_state["generated"][i], key=str(i), avatar_style="bottts-neutral")
 
-        components.html(f"""
-                                <script>
-                                    function scroll(dummy_var_to_force_repeat_execution){{
-                                        var textAreas = parent.document.querySelectorAll('section.main');
-                                        for (let index = 0; index < textAreas.length; index++) {{
-                                            textAreas[index].style.color = 'red'
-                                            textAreas[index].scrollTop = textAreas[index].scrollHeight;
-                                        }}
-                                    }}
-                                    scroll({len(st.session_state['generated'])+len(st.session_state['past'])})
-                                </script>
-                                """)
-
-        # input_text = st.text_input(label="Ask CryptoGPT a question: ",value="", key="input", label_visibility="hidden")
-        with st.form(key='my_form', clear_on_submit=True):
-            input_text = st.text_area(label="Ask CryptoGPT a question: ", placeholder="Summarize today's price and news", key='input', height=100, label_visibility="hidden")
-            submit_button = st.form_submit_button(label='Ask')
+        user_query = st.text_input(label="Ask CryptoGPT a question: ", placeholder="", key=f"input{len(st.session_state['generated'])}", label_visibility="hidden")
     else:
-        with st.form(key='my_form', clear_on_submit=True):
-            input_text = st.text_area(label="Ask CryptoGPT a question: ", placeholder="Summarize today's price and news", key='input', height=100)
-            submit_button = st.form_submit_button(label='Ask')
+        user_query = st.text_input(label="Ask CryptoGPT a question: ", placeholder="Summarize today's price and news", key="input")
 
-    if submit_button and user_input:
-        input_text = st.text_input("Ask CryptoGPT a question: ",placeholder="Summarize today's price and news", key="input")
-    cols = st.columns(4)
-    ask = cols[0].button("Ask", key="ask")
-    reset_chat = cols[-1].button("Reset Chat", key="reset_chat")
+    cols = st.columns([1,4,1])
+    ask = cols[0].button("Ask ", key="ask")
+    reset_chat = cols[-1].button("Start New Chat", key="reset_chat")
 
     if ask:
+        if 'generated' in st.session_state and len(st.session_state['generated']) > 3:
+            with st.spinner('🧹Starting Fresh...'):
+                st.session_state['generated'] = []
+                st.session_state['past'] = []
+
         with st.spinner('🤔 Thinking...'):
             lookback_interval = 6
-            input_prompt = f"""
-                            I want you to summarize what happened today and what will happen to {asset}.
-                            Do not use any news or information beyond {end_time}.
-                            Be brief and to the point.
-                            {asset} price from {lookback_interval} hours ago to now in 30 minute increments: {list(price_data_df['close'].values[-(lookback_interval*2):])}
-                            Latest News: {article_df['title'].values[-(lookback_interval*2):]}
-                            Top Tweets: {None}
-                            Consider 'today' as {end_time} and everything else relative.
-                            It is okay to use the internet to help answer questions about news, people, and events but do not use any news or information beyond {end_time}.
-                            {input_text}.
-                            """
-            print(f"{len(input_prompt)} char input: {input_prompt}")
-
-
-            output = asyncio.run(ask_bing(input_prompt))
+            output = ask_chatgpt(user_query)
             output = '. '.join([line for line in output.split('. ') if 'sorry' not in line.lower()])
             if output[:9] == "However, ":
                 output = output= output[9:]
@@ -691,13 +659,12 @@ if selected_tab == tabs[4]: # Chatbot Tab
         # time.sleep(30)
         print(f"output: {output}")
         # store the output
-        st.session_state['past'].append(input_text)
+        st.session_state['past'].append(user_query)
         st.session_state['generated'].append(output)
         st.experimental_rerun()
 
     if reset_chat:
         with st.spinner('🧹Starting Fresh...'):
-            asyncio.run(reset_bing())
             st.session_state['generated'] = []
             st.session_state['past'] = []
             st.experimental_rerun()
